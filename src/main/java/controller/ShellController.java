@@ -24,6 +24,7 @@ public class ShellController extends Controller {
     public Tab simulationTab;
     public Tab statisticsTab;
     public TabPane stepTabPane;
+    public AnchorPane statisticsContainer;
 
     private Stage popup;
     private Pane popupContainer;
@@ -39,18 +40,6 @@ public class ShellController extends Controller {
             e.printStackTrace();
         }
 
-        try {
-            loadView("simulator.fxml", mainContainer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        try {
-            loadView("output.fxml", sideContainer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         setStep(0);
 
         this.popup = new Stage();
@@ -62,11 +51,11 @@ public class ShellController extends Controller {
         this.popup.setResizable(false);
 
         menuOption.setOnAction(e -> setPopup("option.fxml", 600, 400));
-        stepTabPane.getSelectionModel().selectedItemProperty().addListener((observableValue, tab, t1) -> {
-            if (t1 == simulationTab) {
-                model.simulatorController.initSimulator();
-            }
-        });
+//        stepTabPane.getSelectionModel().selectedItemProperty().addListener((observableValue, tab, t1) -> {
+//            if (t1 == simulationTab) {
+//                model.simulatorController.initSimulator();
+//            }
+//        });
     }
 
     public void setStep(int i) {
@@ -79,9 +68,28 @@ public class ShellController extends Controller {
             case 1:
                 simulationTab.setDisable(false);
                 stepTabPane.getSelectionModel().select(simulationTab);
+
+                try {
+                    loadView("simulator.fxml", mainContainer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                try {
+                    loadView("output.fxml", sideContainer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                model.simulatorController.initSimulator();
                 break;
             case 2:
                 statisticsTab.setDisable(false);
+
+                try {
+                    loadView("statistics.fxml", statisticsContainer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
         }
     }
 

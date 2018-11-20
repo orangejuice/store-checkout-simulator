@@ -46,11 +46,11 @@ public class SimulatorController extends Controller {
     public void initialize(URL location, ResourceBundle resources) {
         setMarketBackgroundAutoFit();
         props = PropertiesTool.getProps();
-
     }
 
     public void initSimulator() {
         initBtnsEvent();
+        model.outputController.clearLogList();
 
         startButton.setDisable(false);
         shutButton.setDisable(true);
@@ -61,6 +61,14 @@ public class SimulatorController extends Controller {
         checkoutChannels = new ArrayList<>();
 
         initCheckout();
+    }
+
+    private void initCheckout() {
+        market.getChildren().parallelStream().forEach(node -> {
+            if (node.getClass() == Customer.class) {
+                market.getChildren().remove(node);
+            }
+        });
 
         Integer quantityOfCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfCheckouts.getId()));
         int i = 0;
@@ -76,9 +84,7 @@ public class SimulatorController extends Controller {
         if (quantityOfExpresswayCheckout > 0) {
             log("[checkout] equipped with " + quantityOfExpresswayCheckout + " expressway checkout");
         }
-    }
 
-    private void initCheckout() {
         new Thread(() -> {
             while (true) {
                 try {

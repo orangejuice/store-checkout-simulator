@@ -46,6 +46,7 @@ public class OutputController extends Controller {
 
     public void clearLogList() {
         logListView.getItems().clear();
+        logModelList.clear();
     }
 
     public void addLog(String text) {
