@@ -19,7 +19,7 @@
                    ButtonBar.buttonData="RIGHT"/>
         </buttons>
     </ButtonBar>
-    <ScrollPane fitToWidth="true">
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
         <VBox fx:id="market">
             <HBox fx:id="background" minWidth="0" VBox.vgrow="ALWAYS">
                 <ImageView fx:id="shelf1" pickOnBounds="true" preserveRatio="true">
@@ -38,6 +38,7 @@
             <!--<Image url="@../image/counter.png"/>-->
             <!--</ImageView>-->
             <!--<Circle stroke="#eae600" strokeWidth="25.0" StackPane.alignment="TOP_RIGHT"/>-->
+            <!--<Label style="-fx-font-style: italic;-fx-font-weight: bold; -fx-font-size: 16;-fx-background-color: #00cf53b9" text="EXPRESSWAY" StackPane.alignment="TOP_LEFT"/>-->
             <!--</StackPane>-->
             <!--<StackPane>-->
             <!--<ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">-->

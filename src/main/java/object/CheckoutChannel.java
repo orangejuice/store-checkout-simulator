@@ -18,6 +18,7 @@ public class CheckoutChannel extends HBox {
         setMinWidth(0);
         VBox.setVgrow(this, Priority.ALWAYS);
 
+        this.type = type;
         counter = new Counter(no, type, true);
         getChildren().add(counter);
     }
@@ -32,6 +33,10 @@ public class CheckoutChannel extends HBox {
 
     public Counter getCounter() {
         return counter;
+    }
+
+    public int getType() {
+        return type;
     }
 
     public static class CheckoutChannelType {

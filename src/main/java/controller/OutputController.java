@@ -5,8 +5,8 @@ import model.LogModel;
 
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -16,7 +16,7 @@ public class OutputController extends Controller {
     public List<LogModel> logModelList;
 
     public void initialize(URL location, ResourceBundle resources) {
-        logModelList = new ArrayList<>();
+        logModelList = new LinkedList<>();
 
         //TODO add icon in listview
 //        logListView.setCellFactory(stringListView -> new ListCell<>() {

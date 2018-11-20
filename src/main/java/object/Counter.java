@@ -1,6 +1,7 @@
 package object;
 
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -33,7 +34,7 @@ public class Counter extends StackPane {
         counterImageView.setOnMouseEntered(mouseEvent -> {
             Tooltip tooltip = new Tooltip("Checkout " + no + "\n\n" +
                     "open:\t\t" + status + "\n" +
-                    "type:\t\t" + (type == 0 ? "normal" : "expressway"));
+                    "type:\t\t" + (type == CheckoutChannel.CheckoutChannelType.NORMAL ? "normal" : "expressway"));
             tooltip.setShowDelay(Duration.ZERO);
             tooltip.setStyle("-fx-font-weight: bold");
             Tooltip.install(counterImageView, tooltip);
@@ -45,6 +46,15 @@ public class Counter extends StackPane {
         StackPane.setAlignment(counterStatusCircle, Pos.TOP_RIGHT);
 
         getChildren().addAll(counterImageView, counterStatusCircle);
+
+        if (type == CheckoutChannel.CheckoutChannelType.EXPRESSWAY) {
+            Label label = new Label();
+            label.setStyle("-fx-font-style: italic;-fx-font-weight: bold;" +
+                    "-fx-font-size: 16;-fx-background-color: #00cf53b9");
+            label.setText("EXPRESSWAY");
+            StackPane.setAlignment(label, Pos.TOP_LEFT);
+            getChildren().add(label);
+        }
     }
 
     public int getNo() {
