@@ -17,7 +17,7 @@ import util.PropertiesTool;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -60,7 +60,7 @@ public class SimulatorController extends Controller {
         customerNo = 0;
         playSpeed.valueProperty().set(0);
         playSpeedDivide = 1;
-        checkoutChannels = new ArrayList<>();
+        checkoutChannels = new LinkedList<>();
 
         initCheckout();
     }
