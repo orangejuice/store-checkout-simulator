@@ -38,6 +38,7 @@ public class PreferenceController extends Controller {
         applyAndContinueButton.setOnAction(actionEvent -> {
             saveSettings();
             model.shellController.setStep(1);
+            model.shellController.stepTabPane.getSelectionModel().select(model.shellController.simulationTab);
         });
     }
 

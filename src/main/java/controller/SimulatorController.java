@@ -37,7 +37,7 @@ public class SimulatorController extends Controller {
     public Label playSpeedDesc;
 
     private List<CheckoutChannel> checkoutChannels;
-    private int playSpeedInt;
+    private int playSpeedDivide;
     private boolean businessStatus;
     private boolean pauseStatus;
     private Properties props;
@@ -58,6 +58,8 @@ public class SimulatorController extends Controller {
         businessStatus = false;
         pauseStatus = false;
         customerNo = 0;
+        playSpeed.valueProperty().set(0);
+        playSpeedDivide = 1;
         checkoutChannels = new ArrayList<>();
 
         initCheckout();
@@ -80,6 +82,7 @@ public class SimulatorController extends Controller {
             addCheckout(i + 1, CheckoutChannel.CheckoutChannelType.EXPRESSWAY);
         }
 
+        log("[store] ready");
         log("[checkout] equipped with " + quantityOfCheckout + " checkout");
         if (quantityOfExpresswayCheckout > 0) {
             log("[checkout] equipped with " + quantityOfExpresswayCheckout + " expressway checkout");
@@ -97,19 +100,19 @@ public class SimulatorController extends Controller {
                         int busyDegree = Double.valueOf(props.getProperty(model.preferenceController.prefBusyDegree.getId())).intValue();
                         switch (busyDegree) {
                             case 0:
-                                Thread.sleep(12000);
+                                Thread.sleep(12000 / playSpeedDivide);
                                 break;
                             case 25:
-                                Thread.sleep(6000);
+                                Thread.sleep(6000 / playSpeedDivide);
                                 break;
                             case 50:
-                                Thread.sleep(3000);
+                                Thread.sleep(3000 / playSpeedDivide);
                                 break;
                             case 75:
-                                Thread.sleep(1500);
+                                Thread.sleep(1500 / playSpeedDivide);
                                 break;
                             case 100:
-                                Thread.sleep(750);
+                                Thread.sleep(750 / playSpeedDivide);
                                 break;
                         }
 
@@ -155,12 +158,12 @@ public class SimulatorController extends Controller {
                                 while (true) {
                                     if (!customer.isBeingServed()) {
                                         try {
-                                            Thread.sleep(1000);
+                                            Thread.sleep(1000 / playSpeedDivide);
                                         } catch (InterruptedException e) {
                                             e.printStackTrace();
                                         }
                                         customer.setWaitSecRemaining(customer.getWaitSecRemaining() - 1);
-                                        System.out.println("Customer" + customer.getNo() + " leave remaining: " + customer.getWaitSecRemaining());
+                                        //System.out.println("Customer" + customer.getNo() + " leave remaining: " + customer.getWaitSecRemaining());
                                         if (customer.getWaitSecRemaining() == 0) {
                                             bestChannel.getCustomers().remove(customer);
                                             bestChannel.getChildren().remove(customer);
@@ -174,7 +177,7 @@ public class SimulatorController extends Controller {
                             }).start();
                         }
                     } else {
-                        Thread.sleep(1000);
+                        Thread.sleep(1000 / playSpeedDivide);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -232,19 +235,19 @@ public class SimulatorController extends Controller {
 
         playSpeed.valueProperty().addListener((observableValue, number, newValue) -> {
             if (newValue.doubleValue() == 0) {
-                playSpeedInt = 1;
+                playSpeedDivide = 1;
                 playSpeedDesc.setText("1x");
             } else if (newValue.doubleValue() == 25) {
-                playSpeedInt = 2;
+                playSpeedDivide = 2;
                 playSpeedDesc.setText("2x");
             } else if (newValue.doubleValue() == 50) {
-                playSpeedInt = 4;
+                playSpeedDivide = 4;
                 playSpeedDesc.setText("4x");
             } else if (newValue.doubleValue() == 75) {
-                playSpeedInt = 8;
+                playSpeedDivide = 8;
                 playSpeedDesc.setText("8x");
             } else if (newValue.doubleValue() == 100) {
-                playSpeedInt = 16;
+                playSpeedDivide = 16;
                 playSpeedDesc.setText("16x");
             }
         });
@@ -272,7 +275,7 @@ public class SimulatorController extends Controller {
                         Double from = Double.valueOf(props.getProperty(model.preferenceController.prefRangeOfEachProductScanTimeFrom.getId()));
                         Double to = Double.valueOf(props.getProperty(model.preferenceController.prefRangeOfEachProductScanTimeTo.getId()));
                         double v = ThreadLocalRandom.current().nextDouble(from, to);
-                        Thread.sleep((long) (v * 1000));
+                        Thread.sleep((long) (v * 1000) / playSpeedDivide);
                         nowCustomer.setQuantityWaitForCheckout(--waitFor);
 
                         // change the arc
@@ -294,7 +297,7 @@ public class SimulatorController extends Controller {
                         }
                     } else {
                         channel.getCounter().getCounterStatusCircle().setStroke(Paint.valueOf("limegreen"));
-                        Thread.sleep(1000);
+                        Thread.sleep(1000 / playSpeedDivide);
                     }
                 } catch (InterruptedException e) {
                     e.printStackTrace();

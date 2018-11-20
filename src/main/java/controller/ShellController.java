@@ -41,6 +41,7 @@ public class ShellController extends Controller {
         }
 
         setStep(0);
+        stepTabPane.getSelectionModel().select(preferencesTab);
 
         this.popup = new Stage();
         this.popup.initModality(Modality.APPLICATION_MODAL);
@@ -51,11 +52,6 @@ public class ShellController extends Controller {
         this.popup.setResizable(false);
 
         menuOption.setOnAction(e -> setPopup("option.fxml", 600, 400));
-//        stepTabPane.getSelectionModel().selectedItemProperty().addListener((observableValue, tab, t1) -> {
-//            if (t1 == simulationTab) {
-//                model.simulatorController.initSimulator();
-//            }
-//        });
     }
 
     public void setStep(int i) {
@@ -63,11 +59,9 @@ public class ShellController extends Controller {
             case 0:
                 simulationTab.setDisable(true);
                 statisticsTab.setDisable(true);
-                stepTabPane.getSelectionModel().select(preferencesTab);
                 break;
             case 1:
                 simulationTab.setDisable(false);
-                stepTabPane.getSelectionModel().select(simulationTab);
 
                 try {
                     loadView("simulator.fxml", mainContainer);

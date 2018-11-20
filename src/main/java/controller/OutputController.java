@@ -40,8 +40,6 @@ public class OutputController extends Controller {
 //                }
 //            }
 //        });
-
-        addLog("[store] ready");
     }
 
     public void clearLogList() {
