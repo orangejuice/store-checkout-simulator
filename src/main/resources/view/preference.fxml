@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.Font?>
+<ScrollPane xmlns:fx="http://javafx.com/fxml/1" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+            AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/10.0.1"
+            fx:controller="controller.PreferenceController">
+    <VBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="General">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Label>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="degree of busy">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <Slider fx:id="prefBusyDegree" minorTickCount="0" prefWidth="150.0" showTickMarks="true"
+                    snapToTicks="true"/>
+            <Label fx:id="busyDegreeDesc" text="normal"/>
+        </HBox>
+        <!--<HBox>-->
+        <!--<padding>-->
+        <!--<Insets bottom="20.0"/>-->
+        <!--</padding>-->
+        <!--<Label text="play speed">-->
+        <!--<padding>-->
+        <!--<Insets right="20.0"/>-->
+        <!--</padding>-->
+        <!--</Label>-->
+        <!--<Slider fx:id="prefPlaySpeed" snapToTicks="true" showTickMarks="true" minorTickCount="0" blockIncrement="25" prefWidth="150.0"/>-->
+        <!--<Label fx:id="playSpeedDesc" text="normal"/>-->
+        <!--</HBox>-->
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="Customer">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Label>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="range of goods quantity per customer from">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <ChoiceBox fx:id="prefRangeOfGoodsQuantityPerCustomerFrom" prefWidth="150.0"/>
+            <Label text="to">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+                <HBox.margin>
+                    <Insets left="20.0"/>
+                </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="prefRangeOfGoodsQuantityPerCustomerTo" prefWidth="150.0"/>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="percentage of a customer who can not wait">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <ChoiceBox fx:id="prefPercentageOfACustomerWhoCantWait" prefWidth="150.0"/>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="customer will leave after waiting for">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <ChoiceBox fx:id="prefCustomerWillLeaveAfterWaitingFor" prefWidth="150.0"/>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="Checkout">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+                <font>
+                    <Font name="System Bold" size="14.0"/>
+                </font>
+            </Label>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="quantity of checkouts">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <ChoiceBox fx:id="prefQuantityOfCheckouts" prefWidth="150.0"/>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="quantity of expressway checkouts">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <ChoiceBox fx:id="prefQuantityOfExpresswayCheckouts" prefWidth="150.0"/>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="expressway checkouts for products less than">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <ChoiceBox fx:id="prefExpresswayCheckoutsForProductsLessThan" prefWidth="150.0"/>
+        </HBox>
+        <HBox>
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Label text="range of each product scan time from">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+            </Label>
+            <ChoiceBox fx:id="prefRangeOfEachProductScanTimeFrom" prefWidth="150.0"/>
+            <Label text="to">
+                <padding>
+                    <Insets right="20.0"/>
+                </padding>
+                <HBox.margin>
+                    <Insets left="20.0"/>
+                </HBox.margin>
+            </Label>
+            <ChoiceBox fx:id="prefRangeOfEachProductScanTimeTo" prefWidth="150.0"/>
+        </HBox>
+        <HBox layoutX="30.0" layoutY="464.0">
+            <padding>
+                <Insets bottom="20.0"/>
+            </padding>
+            <Region prefWidth="200.0" HBox.hgrow="ALWAYS"/>
+            <Button fx:id="applyButton" mnemonicParsing="false" text="apply"/>
+            <Button fx:id="applyAndContinueButton" layoutX="10.0" layoutY="10.0" mnemonicParsing="false"
+                    text="apply and continue">
+                <HBox.margin>
+                    <Insets left="20.0"/>
+                </HBox.margin>
+            </Button>
+        </HBox>
+        <padding>
+            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0"/>
+        </padding>
+    </VBox>
+</ScrollPane>

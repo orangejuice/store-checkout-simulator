@@ -17,19 +17,36 @@ public abstract class Controller implements Initializable {
 
     public abstract void initialize(URL location, ResourceBundle resources);
 
-    public void setModel(MainModel model) { this.model = model; }
+    public void setModel(MainModel model) {
+        this.model = model;
+    }
 
     protected Pane loadView(String viewName) throws IOException {
-        /* On récupère la vue dans un pane */
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/views/" + viewName));
         Pane newPane = fxmlLoader.load();
-
-        /* On charge le controller et on lui passse le model */
         Controller ctrl = fxmlLoader.getController();
         ctrl.setModel(model);
 
         return newPane;
     }
 
+    protected void loadView(String viewName, Pane container) throws IOException {
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/" + viewName));
+        Node newPane = fxmlLoader.load();
+        Controller controller = fxmlLoader.getController();
 
+        //System.out.println(viewName + ":" + container + ":" + model);
+        if (controller != null) {
+            if (controller.getClass() == OutputController.class) {
+                model.outputController = (OutputController) controller;
+            } else if (controller.getClass() == PreferenceController.class) {
+                model.preferenceController = (PreferenceController) controller;
+            } else if (controller.getClass() == SimulatorController.class) {
+                model.simulatorController = (SimulatorController) controller;
+            }
+            controller.setModel(model);
+        }
+
+        container.getChildren().setAll(newPane);
+    }
 }

@@ -1,0 +1,16 @@
+.vbox {
+    -fx-padding: 20;
+}
+
+.hbox {
+    -fx-padding: 0, 0, 20, 0;
+}
+
+.label {
+    -fx-padding: 0, 20, 0, 0;
+}
+
+.title {
+    -fx-font-size: 14;
+    -fx-font-weight: bold;
+}

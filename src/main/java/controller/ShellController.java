@@ -1,10 +1,15 @@
 package controller;
 
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
-import javafx.scene.control.Menu;
+import application.MainApp;
+import javafx.scene.Scene;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import model.MainModel;
 
 import java.io.IOException;
 import java.net.URL;
@@ -13,9 +18,26 @@ import java.util.ResourceBundle;
 public class ShellController extends Controller {
     public AnchorPane mainContainer;
     public AnchorPane sideContainer;
-    public Menu menuOption;
+    public MenuItem menuOption;
+    public AnchorPane preferenceContainer;
+    public Tab preferencesTab;
+    public Tab simulationTab;
+    public Tab statisticsTab;
+    public TabPane stepTabPane;
+
+    private Stage popup;
+    private Pane popupContainer;
+
 
     public void initialize(URL location, ResourceBundle resources) {
+        model = new MainModel();
+        model.shellController = this;
+
+        try {
+            loadView("preference.fxml", preferenceContainer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         try {
             loadView("simulator.fxml", mainContainer);
@@ -29,22 +51,56 @@ public class ShellController extends Controller {
             e.printStackTrace();
         }
 
+        setStep(0);
+
+        this.popup = new Stage();
+        this.popup.initModality(Modality.APPLICATION_MODAL);
+        this.popup.initOwner(MainApp.getPrimaryStage());
+        this.popupContainer = new Pane();
+        Scene popupScene = new Scene(popupContainer);
+        this.popup.setScene(popupScene);
+        this.popup.setResizable(false);
+
+        menuOption.setOnAction(e -> setPopup("option.fxml", 600, 400));
+        stepTabPane.getSelectionModel().selectedItemProperty().addListener((observableValue, tab, t1) -> {
+            if (t1 == simulationTab) {
+                model.simulatorController.initSimulator();
+            }
+        });
     }
 
-    private void loadView(String viewName, Pane container) throws IOException {
-        FXMLLoader fxmlLoader = new FXMLLoader();
-        Node newPane = fxmlLoader.load(getClass().getResource("/view/" + viewName));
+    public void setStep(int i) {
+        switch (i) {
+            case 0:
+                simulationTab.setDisable(true);
+                statisticsTab.setDisable(true);
+                stepTabPane.getSelectionModel().select(preferencesTab);
+                break;
+            case 1:
+                simulationTab.setDisable(false);
+                stepTabPane.getSelectionModel().select(simulationTab);
+                break;
+            case 2:
+                statisticsTab.setDisable(false);
+        }
+    }
 
-        Controller controller = fxmlLoader.getController();
+    public void setPopup(String viewName, int width, int height) {
+        String title = viewName.substring(0, 1).toUpperCase() + viewName.substring(1).replace(".fxml", "");
+        this.popup.setTitle(title);
 
-        if(controller != null)
-        {
-            if ( controller.getClass() == OutputController.class ){
-                model.outputController = (OutputController) controller;
-            }
-            controller.setModel(model);
+        try {
+            loadView(viewName, popupContainer);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
-        container.getChildren().setAll(newPane);
+        popup.setHeight(height + 30);
+        popup.setWidth(width);
+        popup.show();
+    }
+
+    public void exit() {
+        System.exit(0);
     }
 }

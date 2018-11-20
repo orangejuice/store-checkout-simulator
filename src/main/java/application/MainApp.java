@@ -1,3 +1,6 @@
+package application;
+
+import controller.ShellController;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -9,7 +12,7 @@ public class MainApp extends Application {
 
     private static Stage primaryStage;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         launch(args);
     }
 
@@ -18,6 +21,7 @@ public class MainApp extends Application {
         setPrimaryStage(stage);
         FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/view/shell.fxml"));
         Parent root = fxmlLoader.load();
+        ShellController shellController = fxmlLoader.getController();
         stage.getIcons().add(new Image(getClass().getResourceAsStream("/image/icon.png")));
 
         Scene scene = new Scene(root);
@@ -29,6 +33,11 @@ public class MainApp extends Application {
         stage.setHeight(root.prefHeight(-1));
         stage.setWidth(root.prefWidth(-1));
         stage.show();
+
+        primaryStage.setOnCloseRequest(windowEvent -> {
+            shellController.exit();
+            System.exit(0);
+        });
     }
 
     public static Stage getPrimaryStage(){

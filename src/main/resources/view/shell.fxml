@@ -1,18 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.Menu?>
-<?import javafx.scene.control.MenuBar?>
-<?import javafx.scene.control.MenuItem?>
-<?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.layout.AnchorPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.text.Font?>
-
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-            minWidth="-Infinity" prefHeight="500.0" prefWidth="800.0"
-            xmlns="http://javafx.com/javafx" xmlns:fx="http://javafx.com/fxml"
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
+            minWidth="-Infinity" prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/10.0.1"
             fx:controller="controller.ShellController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
@@ -22,8 +13,8 @@
             <Menu mnemonicParsing="false" text="Edit">
                 <MenuItem mnemonicParsing="false" text="Delete"/>
             </Menu>
-            <Menu mnemonicParsing="false" text="Option" fx:id="menuOption">
-
+            <Menu mnemonicParsing="false" text="Option">
+                <MenuItem fx:id="menuOption" mnemonicParsing="false" text="Simulation Settings"/>
             </Menu>
             <Menu mnemonicParsing="false" text="Help">
                 <MenuItem mnemonicParsing="false" text="About"/>
@@ -31,10 +22,22 @@
         </MenuBar>
     </top>
     <center>
-        <SplitPane prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
-            <AnchorPane fx:id="mainContainer"/>
-            <AnchorPane maxWidth="400.0" minWidth="240.0" prefHeight="475.0" prefWidth="300.0"
-            fx:id="sideContainer"/>
-        </SplitPane>
+        <TabPane fx:id="stepTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE"
+                 BorderPane.alignment="CENTER">
+            <Tab text="Preferences" fx:id="preferencesTab">
+                <AnchorPane fx:id="preferenceContainer"/>
+            </Tab>
+            <Tab text="Simulation" fx:id="simulationTab">
+                <!--<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>-->
+                <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+                    <AnchorPane fx:id="mainContainer"/>
+                    <AnchorPane fx:id="sideContainer" maxWidth="400.0" minWidth="240.0" prefHeight="500.0"
+                                prefWidth="300.0"/>
+                </SplitPane>
+            </Tab>
+            <Tab text="Statistics" fx:id="statisticsTab">
+                <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>
+            </Tab>
+        </TabPane>
     </center>
 </BorderPane>

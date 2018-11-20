@@ -7,6 +7,10 @@
     <groupId>meteor</groupId>
     <artifactId>checkout</artifactId>
     <version>1.0-SNAPSHOT</version>
+    <properties>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+    </properties>
 
     <build>
         <plugins>
@@ -32,6 +36,15 @@
 
 
     <dependencies>
+
+        <!-- https://mvnrepository.com/artifact/org.controlsfx/controlsfx -->
+        <!--<dependency>-->
+        <!--<groupId>org.controlsfx</groupId>-->
+        <!--<artifactId>controlsfx</artifactId>-->
+        <!--<version>9.0.0</version>-->
+        <!--</dependency>-->
+        <!--what a pity i know you have fixed the bug but i cannot use it!-->
+
 
         <dependency>
             <groupId>org.openjfx</groupId>

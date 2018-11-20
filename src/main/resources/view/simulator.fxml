@@ -1,8 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.AnchorPane?>
-
-
-<AnchorPane minHeight="0.0" minWidth="0.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="controller.SimulatorController">
-
-</AnchorPane>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+      AnchorPane.rightAnchor="0.0"
+      AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/10.0.1"
+      fx:controller="controller.SimulatorController">
+    <ButtonBar prefHeight="40.0" style="-fx-padding: 5">
+        <buttons>
+            <Button fx:id="startButton" maxWidth="100" text="▶ Open door" ButtonBar.buttonData="LEFT"/>
+            <Button fx:id="shutButton" maxWidth="100" text="■ Shut door" ButtonBar.buttonData="LEFT"/>
+            <Button fx:id="resetButton" maxWidth="150" text="↺ Begin a new day" ButtonBar.buttonData="LEFT"/>
+            <Label maxWidth="70" text="Play speed:" ButtonBar.buttonData="RIGHT"/>
+            <Slider fx:id="playSpeed" maxWidth="200.0" minorTickCount="0" showTickMarks="true" snapToTicks="true"
+                    ButtonBar.buttonData="RIGHT"/>
+            <Label fx:id="playSpeedDesc" maxWidth="20" style="-fx-padding: 0,0,0,5;" text="1x"
+                   ButtonBar.buttonData="RIGHT"/>
+        </buttons>
+    </ButtonBar>
+    <ScrollPane fitToWidth="true">
+        <VBox fx:id="market">
+            <HBox fx:id="background" minWidth="0" VBox.vgrow="ALWAYS">
+                <ImageView fx:id="shelf1" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../image/Shelf_1.png"/>
+                </ImageView>
+                <ImageView fx:id="entry" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../image/entry.jpeg"/>
+                </ImageView>
+                <ImageView fx:id="shelf2" pickOnBounds="true" preserveRatio="true">
+                    <Image url="@../image/Shelf_2.png"/>
+                </ImageView>
+            </HBox>
+            <!--<HBox minWidth="0" VBox.vgrow="ALWAYS">-->
+            <!--<StackPane>-->
+            <!--<ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">-->
+            <!--<Image url="@../image/counter.png"/>-->
+            <!--</ImageView>-->
+            <!--<Circle stroke="#eae600" strokeWidth="25.0" StackPane.alignment="TOP_RIGHT"/>-->
+            <!--</StackPane>-->
+            <!--<StackPane>-->
+            <!--<ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">-->
+            <!--<Image url="@../image/trolley.png"/>-->
+            <!--</ImageView>-->
+            <!--<Arc fill="#2197ffc4" length="270.0" radiusX="15.0" radiusY="15.0" startAngle="90.0" stroke="BLACK"-->
+            <!--strokeType="INSIDE" type="ROUND" StackPane.alignment="BOTTOM_RIGHT"/>-->
+            <!--</StackPane>-->
+            <!--<StackPane>-->
+            <!--<ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">-->
+            <!--<Image url="@../image/trolley.png"/>-->
+            <!--</ImageView>-->
+            <!--</StackPane>-->
+            <!--<StackPane>-->
+            <!--<ImageView fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">-->
+            <!--<Image url="@../image/trolley.png"/>-->
+            <!--</ImageView>-->
+            <!--</StackPane>-->
+            <!--</HBox>-->
+        </VBox>
+    </ScrollPane>
+</VBox>
