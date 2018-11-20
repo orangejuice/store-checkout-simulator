@@ -43,10 +43,10 @@ public class Customer extends StackPane {
 
         customerImageView.setOnMouseEntered(mouseEvent -> {
             Tooltip tooltip = new Tooltip("Customer " + no + "\n\n" +
-                    "quantity of goods:" + quantityOfGoods + "\n" +
-                    "quantity of goods waiting for serve:" + quantityWaitForCheckout + "\n" +
-                    "temper:" + (cannotWait ? "bad :(" : "good :)") +
-                    (cannotWait ? "\nwill leave after:" + waitSecRemaining : "")
+                    "quantity of goods:\t\t" + quantityOfGoods + "\n" +
+                    "quantity of goods waiting for serve:\t\t" + quantityWaitForCheckout + "\n" +
+                    "temper:\t\t" + (cannotWait ? "bad :(" : "good :)") +
+                    (cannotWait ? "\nwill leave after:\t\t" + waitSecRemaining : "")
             );
             tooltip.setShowDelay(Duration.ZERO);
             tooltip.setStyle("-fx-font-weight: bold");

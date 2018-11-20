@@ -32,8 +32,8 @@ public class Counter extends StackPane {
 
         counterImageView.setOnMouseEntered(mouseEvent -> {
             Tooltip tooltip = new Tooltip("Checkout " + no + "\n\n" +
-                    "open:" + status + "\n" +
-                    "type:" + (type == 0 ? "normal" : "expressway"));
+                    "open:\t\t" + status + "\n" +
+                    "type:\t\t" + (type == 0 ? "normal" : "expressway"));
             tooltip.setShowDelay(Duration.ZERO);
             tooltip.setStyle("-fx-font-weight: bold");
             Tooltip.install(counterImageView, tooltip);
@@ -45,6 +45,18 @@ public class Counter extends StackPane {
         StackPane.setAlignment(counterStatusCircle, Pos.TOP_RIGHT);
 
         getChildren().addAll(counterImageView, counterStatusCircle);
+    }
+
+    public int getNo() {
+        return no;
+    }
+
+    public boolean isStatus() {
+        return status;
+    }
+
+    public int getType() {
+        return type;
     }
 
     public Circle getCounterStatusCircle() {

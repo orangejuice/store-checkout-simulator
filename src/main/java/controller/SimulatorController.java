@@ -291,7 +291,7 @@ public class SimulatorController extends Controller {
                                                 .findFirst()
                                                 .get()
                                 );
-                                log("[Checkout " + nowCustomerNo + "] served a customer");
+                                log("[checkout] " + channel.getCounter().getNo() + " served a customer");
                             });
                             channel.getCustomers().poll();
                         }
