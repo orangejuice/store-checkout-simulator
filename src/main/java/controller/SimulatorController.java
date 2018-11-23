@@ -21,10 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 public class SimulatorController extends Controller {
@@ -45,6 +42,8 @@ public class SimulatorController extends Controller {
     private boolean pauseStatus;
     private Properties props;
     private int customerNo;
+    private ScheduledExecutorService customerComingExecutorService;
+    private ScheduledFuture<?> customerComingTask;
 
     public void initialize(URL location, ResourceBundle resources) {
         setMarketBackgroundAutoFit();
@@ -64,6 +63,7 @@ public class SimulatorController extends Controller {
         playSpeed.valueProperty().set(0);
         playSpeedDivide = 1;
         checkoutChannels = new LinkedList<>();
+        customerComingExecutorService = Executors.newSingleThreadScheduledExecutor();
 
         initCheckout();
         initCustomerComingExecutorService();
@@ -189,8 +189,11 @@ public class SimulatorController extends Controller {
         } else {
             period = 3000000 / playSpeedDivide;
         }
-        ScheduledExecutorService customerComingExecutorService = Executors.newSingleThreadScheduledExecutor();
-        customerComingExecutorService.scheduleAtFixedRate(() -> {
+
+        if (customerComingTask != null) {
+            customerComingTask.cancel(false);
+        }
+        customerComingTask = customerComingExecutorService.scheduleAtFixedRate(() -> {
             try {
                 if (businessStatus && !pauseStatus) {
                     //quantity of goods
@@ -243,13 +246,14 @@ public class SimulatorController extends Controller {
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
-                                    customer.setWaitSecRemaining(customer.getWaitSecRemaining() - 1);
                                     //System.out.println("Customer" + customer.getNo() + " leave remaining: " + customer.getWaitSecRemaining());
-                                    if (customer.getWaitSecRemaining() == 0) {
-                                        bestChannel.getChildren().remove(customer);
-                                        bestChannel.getCustomers().remove(customer);
-                                        log("[customer] [leave] customer" + customerNo
-                                                + " leaved after waiting for " + customer.getWaitSec() + "s");
+                                    if (customer.updateWaitSecActual(1) >= waitSec) {
+                                        Platform.runLater(() -> {
+                                            bestChannel.getChildren().remove(customer);
+                                            bestChannel.getCustomers().remove(customer);
+                                            log("[customer] [leave] customer" + customerNo
+                                                    + " leaved after waiting for " + customer.getWaitSec() + "s");
+                                        });
                                     }
                                 } else {
                                     break;
