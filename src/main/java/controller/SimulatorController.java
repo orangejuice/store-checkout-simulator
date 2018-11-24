@@ -79,7 +79,6 @@ public class SimulatorController extends Controller {
         initTimeCountService();
     }
 
-    //todo forbidden while simulating
     private void initTimeCountService() {
         int period = 1000000 / playSpeedDivide;
 
@@ -274,7 +273,7 @@ public class SimulatorController extends Controller {
         Platform.runLater(() -> {
             log("[customer] [new] customer" + customerNo + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
                     (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
-//            bestChannel.getChildren().add(customer);
+            bestChannel.getChildren().add(customer);
             bestChannel.getCustomers().offer(customer);
         });
     }
@@ -303,14 +302,13 @@ public class SimulatorController extends Controller {
                         nowCustomer.setQuantityWaitForCheckout(--waitFor);
 
                         // change the arc
-                        //TODO arc centralize
                         nowCustomer.getArc().setLength(360.0 * waitFor / total);
 
                         // if 0, delete
                         if (waitFor == 0) {
                             channel.getCounter().updateTotalServed(1);
                             Platform.runLater(() -> {
-//                                channel.getChildren().remove(nowCustomer);
+                                channel.getChildren().remove(nowCustomer);
                                 channel.getCustomers().poll();
                                 log("[checkout] " + channel.getCounter().getNo() + " served a customer", Level.INFO);
                             });

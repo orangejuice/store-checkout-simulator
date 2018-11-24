@@ -63,6 +63,7 @@ public class Counter extends StackPane {
 
         counterStatusCircle = new Circle();
         counterStatusCircle.setStrokeWidth(25.0);
+        counterStatusCircle.setStroke(Paint.valueOf("limegreen"));
         StackPane.setAlignment(counterStatusCircle, Pos.TOP_RIGHT);
 
         Label label = new Label();
@@ -76,7 +77,6 @@ public class Counter extends StackPane {
             label.setText(String.valueOf(no));
         }
         getChildren().addAll(counterImageView, counterStatusCircle, label);
-        setBusying(false, 0);
     }
 
     public void setBusying(boolean busyingStatus, int playSpeedDivide) {

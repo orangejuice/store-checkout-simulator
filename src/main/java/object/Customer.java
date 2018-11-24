@@ -2,14 +2,17 @@ package object;
 
 import javafx.application.Platform;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 import model.MainModel;
@@ -66,18 +69,16 @@ public class Customer extends StackPane {
         tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
         initTooltipService(500);
 
-        arc = new Arc();
+        arc = new Arc(30, 30, 25, 25, 90, 0);
         arc.setFill(Paint.valueOf("#2197ff80"));
-        arc.setLength(0);
-        arc.setRadiusX(25);
-        arc.setRadiusY(25);
-        arc.setStartAngle(90);
         arc.setStroke(Paint.valueOf("black"));
         arc.setStrokeType(StrokeType.INSIDE);
         arc.setType(ArcType.ROUND);
-        StackPane.setAlignment(arc, Pos.CENTER);
+        Rectangle fill = new Rectangle(60, 60, Color.TRANSPARENT);
+        Group group = new Group(arc, fill);
+        StackPane.setAlignment(group, Pos.CENTER);
 
-        getChildren().addAll(customerImageView, arc);
+        getChildren().addAll(customerImageView, group);
     }
 
     public void initTimeCountService() {
@@ -96,8 +97,7 @@ public class Customer extends StackPane {
                 if (isCannotWait() && waitSecActual >= getWaitSec()) {
                     Platform.runLater(() -> {
                         ((Checkout) getParent()).getCustomers().remove(this);
-//                        bestChannel.getCustomers().remove(customer);
-//                            bestChannel.getChildren().remove(customer);
+                        ((Checkout) getParent()).getChildren().remove(this);
                         MainModel.getInstance().outputController.addLog("[customer] [leave] customer" + no
                                 + " leaved after waiting for " + getWaitSec() + "s", Level.WARNING);
                     });

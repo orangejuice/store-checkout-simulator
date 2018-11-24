@@ -77,15 +77,14 @@ public class ShellController extends Controller {
             case 0:
                 simulationTab.setDisable(true);
                 statisticsTab.setDisable(true);
-                preferenceContainer.setDisable(false);
+                preferencesTab.setDisable(false);
                 break;
             case 1:
                 simulationTab.setDisable(false);
-                preferenceContainer.setDisable(true);
+                statisticsTab.setDisable(false);
+                preferencesTab.setDisable(true);
                 model.simulatorController.initSimulator();
                 break;
-            case 2:
-                statisticsTab.setDisable(false);
         }
     }
 
