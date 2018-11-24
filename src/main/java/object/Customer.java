@@ -22,6 +22,7 @@ public class Customer extends StackPane {
     private Tooltip tooltip;
     private Arc arc;
 
+    private static Image trolley;
     private int no;
     private int quantityOfGoods;
     private int quantityWaitForCheckout;
@@ -46,9 +47,10 @@ public class Customer extends StackPane {
         customerImageView.setFitWidth(200);
         customerImageView.setPickOnBounds(true);
         customerImageView.setPreserveRatio(true);
-        customerImageView.setId("Customer");
-        Image image = new Image(getClass().getResourceAsStream("/image/trolley.png"));
-        customerImageView.setImage(image);
+        if (trolley == null) {
+            trolley = new Image(getClass().getResourceAsStream("/image/trolley.png"));
+        }
+        customerImageView.setImage(trolley);
 
         tooltip = new Tooltip();
         tooltip.setShowDelay(Duration.ZERO);

@@ -52,6 +52,7 @@ public class SimulatorController extends Controller {
     private ScheduledFuture<?> timeCountTask;
 
     //todo bug of "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 2
+    //todo shield element operation in fxml is helpful.
     public void initialize(URL location, ResourceBundle resources) {
         setMarketBackgroundAutoFit();
         props = PropertiesTool.getProps();
@@ -79,7 +80,6 @@ public class SimulatorController extends Controller {
     }
 
     //todo forbidden while simulating
-    //todo customer stop to come
     private void initTimeCountService() {
         int period = 1000000 / playSpeedDivide;
 
@@ -252,8 +252,6 @@ public class SimulatorController extends Controller {
 
                     Customer customer = new Customer(++customerNo, quantity, cannotWait, waitSec);
                     addCustomer(customer);
-                } else {
-                    TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
                 }
             } catch (Exception e) {
                 e.printStackTrace();

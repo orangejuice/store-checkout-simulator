@@ -41,6 +41,6 @@ public class OutputController extends Controller {
         Label label = new Label("[" + DateTimeFormat.forPattern("HH:mm:ss")
                 .print(model.simulatorController.getSimulateTime()) + "] " + text, fontIcon);
         logListView.getItems().add(label);
-        logListView.scrollTo(label);
+        //todo follow when scrollbar show up
     }
 }
