@@ -277,29 +277,6 @@ public class SimulatorController extends Controller {
 //            bestChannel.getChildren().add(customer);
             bestChannel.getCustomers().offer(customer);
         });
-
-        new Thread(() -> {
-            while (true) {
-                if (!customer.isBeingServed()) {
-                    try {
-                        TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    int waitSecActual = customer.updateWaitSecActual(1);
-                    if (customer.isCannotWait() && waitSecActual >= customer.getWaitSec()) {
-                        Platform.runLater(() -> {
-                            bestChannel.getCustomers().remove(customer);
-//                            bestChannel.getChildren().remove(customer);
-                            log("[customer] [leave] customer" + customerNo
-                                    + " leaved after waiting for " + customer.getWaitSec() + "s", Level.WARNING);
-                        });
-                    }
-                } else {
-                    break;
-                }
-            }
-        }).start();
     }
 
     private void addCheckout(Checkout channel) {
@@ -359,6 +336,10 @@ public class SimulatorController extends Controller {
 
     private void log(String text, Level level) {
         model.outputController.addLog(text, level);
+    }
+
+    public int getPlaySpeedDivide() {
+        return playSpeedDivide;
     }
 
     public DateTime getSimulateTime() {

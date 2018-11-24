@@ -12,11 +12,13 @@ import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
 import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
+import model.MainModel;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 
 public class Customer extends StackPane {
     private Tooltip tooltip;
@@ -32,6 +34,8 @@ public class Customer extends StackPane {
     private int waitSecActual;
     private ScheduledExecutorService tooltipUpdateExecutorService;
     private ScheduledFuture<?> tooltipUpdateTask;
+    private ScheduledExecutorService timeCountService;
+    private ScheduledFuture<?> timeCountTask;
 
     public Customer(int no, int quantityOfGoods, boolean cannotWait, int waitSec) {
         this.no = no;
@@ -41,6 +45,7 @@ public class Customer extends StackPane {
         this.waitSecActual = 0;
         this.waitSec = waitSec;
         this.isBeingServed = false;
+        timeCountService = Executors.newSingleThreadScheduledExecutor();
 
         ImageView customerImageView = new ImageView();
         customerImageView.setFitHeight(150);
@@ -73,6 +78,32 @@ public class Customer extends StackPane {
         StackPane.setAlignment(arc, Pos.CENTER);
 
         getChildren().addAll(customerImageView, arc);
+    }
+
+    public void initTimeCountService() {
+        if (timeCountTask != null) {
+            timeCountTask.cancel(false);
+        }
+        if (isBeingServed) {
+            return;
+        }
+        int playSpeedDivide = MainModel.getInstance().simulatorController.getPlaySpeedDivide();
+        if (playSpeedDivide != 0) {
+            int period = 1000000 / playSpeedDivide;
+            timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
+                initTimeCountService();
+                waitSecActual += 1;
+                if (isCannotWait() && waitSecActual >= getWaitSec()) {
+                    Platform.runLater(() -> {
+                        ((Checkout) getParent()).getCustomers().remove(this);
+//                        bestChannel.getCustomers().remove(customer);
+//                            bestChannel.getChildren().remove(customer);
+                        MainModel.getInstance().outputController.addLog("[customer] [leave] customer" + no
+                                + " leaved after waiting for " + getWaitSec() + "s", Level.WARNING);
+                    });
+                }
+            }, period, period, TimeUnit.MICROSECONDS);
+        }
     }
 
     public void initTooltipService(long period) {
@@ -123,9 +154,5 @@ public class Customer extends StackPane {
 
     public void setBeingServed(boolean beingServed) {
         isBeingServed = beingServed;
-    }
-
-    public int updateWaitSecActual(int plusSec) {
-        return waitSecActual += plusSec;
     }
 }

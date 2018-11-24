@@ -39,6 +39,9 @@ public class Counter extends StackPane {
         this.type = type;
         totalServed = 0;
         totalServedTime = new DateTime().secondOfDay().setCopy(0);
+        tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
+        timeCountService = Executors.newSingleThreadScheduledExecutor();
+        initTooltipService(500);
 
         ImageView counterImageView = new ImageView();
         counterImageView.setFitHeight(150);
@@ -57,9 +60,6 @@ public class Counter extends StackPane {
         setOnMouseExited(mouseEvent -> {
             tooltip.hide();
         });
-        tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
-        timeCountService = Executors.newSingleThreadScheduledExecutor();
-        initTooltipService(500);
 
         counterStatusCircle = new Circle();
         counterStatusCircle.setStrokeWidth(25.0);
