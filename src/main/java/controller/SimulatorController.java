@@ -7,6 +7,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import object.Checkout;
@@ -77,6 +78,7 @@ public class SimulatorController extends Controller {
         initTimeCountService();
     }
 
+    //todo forbidden while simulating
     //todo customer stop to come
     private void initTimeCountService() {
         int period = 1000000 / playSpeedDivide;
@@ -106,12 +108,9 @@ public class SimulatorController extends Controller {
     }
 
     private void initCheckout() {
-        market.getChildren().forEach(node -> {
-            if (node.getClass() == Customer.class) {
-                market.getChildren().remove(node);
-            }
-        });
+        market.getChildren().removeIf(node -> node.getClass() != HBox.class);
         checkouts = new LinkedList<>();
+
         Integer quantityOfCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfCheckouts.getId()));
         int no = 0;
         for (int i = 0; i < quantityOfCheckout; no++, i++) {
@@ -256,7 +255,7 @@ public class SimulatorController extends Controller {
                 } else {
                     TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
                 }
-            } catch (InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         }, period, period, TimeUnit.MICROSECONDS);
