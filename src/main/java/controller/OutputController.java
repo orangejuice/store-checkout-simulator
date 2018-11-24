@@ -1,57 +1,44 @@
 package controller;
 
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import model.LogModel;
+import javafx.scene.paint.Paint;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
 
 public class OutputController extends Controller {
-    public ListView<String> logListView;
-
-    public List<LogModel> logModelList;
+    public ListView<Label> logListView;
 
     public void initialize(URL location, ResourceBundle resources) {
-        logModelList = new LinkedList<>();
 
-        //TODO add icon in listview
-//        logListView.setCellFactory(stringListView -> new ListCell<>() {
-//            //            private ImageView imageView = new ImageView();
-//            private Tooltip tooltip = new Tooltip();
-//
-//            @Override
-//            public void updateItem(String item, boolean empty) {
-//                super.updateItem(item, empty);
-//                if (empty) {
-//                    setTooltip(null);
-////                    setGraphic(null);
-//                } else {
-//                    tooltip.setText(item);
-//                    setTooltip(tooltip);
-//                // true makes this load in background
-//                // see other constructors if you want to control the size, etc
-////                    Image image = new Image(item, true) ;
-////                    imageView.setImage(image);
-////                    setGraphic(imageView);
-//                }
-//            }
-//        });
     }
 
     public void clearLogList() {
         logListView.getItems().clear();
-        logModelList.clear();
     }
 
-    public void addLog(String text) {
+    public void addLog(String text, Level level) {
         Date now = new Date();
-        logModelList.add(new LogModel(text, now));
 
         SimpleDateFormat dateFormatter = new SimpleDateFormat("HH:mm:ss");
-        logListView.getItems().add("[" + dateFormatter.format(now) + "] " + text);
+
+        FontIcon fontIcon = new FontIcon();
+        if (level == Level.WARNING) {
+            fontIcon.setIconLiteral("fas-exclamation-circle");
+            fontIcon.setIconColor(Paint.valueOf("#e00000"));
+        } else if (level == Level.CONFIG) {
+            fontIcon.setIconLiteral("fas-check-circle");
+            fontIcon.setIconColor(Paint.valueOf("#00e070"));
+        } else {
+            fontIcon.setIconLiteral("fas-info-circle");
+            fontIcon.setIconColor(Paint.valueOf("#0070e0"));
+        }
+        Label label = new Label("[" + dateFormatter.format(now) + "] " + text, fontIcon);
+        logListView.getItems().add(label);
     }
 }

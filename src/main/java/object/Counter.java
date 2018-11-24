@@ -51,7 +51,7 @@ public class Counter extends StackPane {
         tooltip.setTextAlignment(TextAlignment.JUSTIFY);
         tooltip.setStyle("-fx-font-weight: bold");
         setOnMouseMoved(mouseEvent -> {
-            tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX(), mouseEvent.getScreenY() + 15);
+            tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + 5, mouseEvent.getScreenY() + 15);
         });
         setOnMouseExited(mouseEvent -> {
             tooltip.hide();
@@ -64,16 +64,17 @@ public class Counter extends StackPane {
         counterStatusCircle.setStrokeWidth(25.0);
         StackPane.setAlignment(counterStatusCircle, Pos.TOP_RIGHT);
 
-        getChildren().addAll(counterImageView, counterStatusCircle);
-
-        if (type == CheckoutChannel.CheckoutChannelType.EXPRESSWAY) {
-            Label label = new Label();
-            label.setStyle("-fx-font-style: italic;-fx-font-weight: bold;" +
-                    "-fx-font-size: 16;-fx-background-color: #00cf53b9");
+        Label label = new Label();
+        StackPane.setAlignment(label, Pos.TOP_LEFT);
+        label.setStyle("-fx-font-style: italic;-fx-font-weight: bold;" +
+                "-fx-font-size: 16");
+        //;-fx-background-color: #00cf53b9
+        if (type == Checkout.CheckoutChannelType.EXPRESSWAY) {
             label.setText("EXPRESSWAY");
-            StackPane.setAlignment(label, Pos.TOP_LEFT);
-            getChildren().add(label);
+        } else {
+            label.setText(String.valueOf(no));
         }
+        getChildren().addAll(counterImageView, counterStatusCircle, label);
     }
 
     public void initTooltipService(long period) {
@@ -84,8 +85,8 @@ public class Counter extends StackPane {
             tooltip.setText("Checkout " + no + "\n\n" +
                     "open: " + status + "\n" +
                     "served customers: " + totalServed + "\n" +
-                    "valid time: " + totalServedSec + " s\n" +
-                    "type: " + (type == CheckoutChannel.CheckoutChannelType.NORMAL ? "normal" : "expressway"));
+                    "valid time: " + totalServedSec + "s\n" +
+                    "type: " + (type == Checkout.CheckoutChannelType.NORMAL ? "normal" : "expressway"));
         }), 0, period, TimeUnit.MILLISECONDS);
     }
 

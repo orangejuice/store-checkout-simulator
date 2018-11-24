@@ -10,7 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Paint;
 import javafx.util.Duration;
-import object.CheckoutChannel;
+import object.Checkout;
 import object.Customer;
 import util.PropertiesTool;
 
@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.concurrent.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class SimulatorController extends Controller {
@@ -36,7 +37,7 @@ public class SimulatorController extends Controller {
     public Slider playSpeed;
     public Label playSpeedDesc;
 
-    private List<CheckoutChannel> checkoutChannels;
+    private List<Checkout> checkouts;
     private int playSpeedDivide;
     private boolean businessStatus;
     private boolean pauseStatus;
@@ -50,6 +51,7 @@ public class SimulatorController extends Controller {
         props = PropertiesTool.getProps();
     }
 
+    //todo add processing bar
     public void initSimulator() {
         initBtnsEvent();
         model.outputController.clearLogList();
@@ -62,7 +64,7 @@ public class SimulatorController extends Controller {
         customerNo = 0;
         playSpeed.valueProperty().set(0);
         playSpeedDivide = 1;
-        checkoutChannels = new LinkedList<>();
+        checkouts = new LinkedList<>();
         customerComingExecutorService = Executors.newSingleThreadScheduledExecutor();
 
         initCheckout();
@@ -77,28 +79,30 @@ public class SimulatorController extends Controller {
         });
 
         Integer quantityOfCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfCheckouts.getId()));
-        int i = 0;
-        for (int j = 0; j < quantityOfCheckout; i++, j++) {
-            addCheckout(i + 1, CheckoutChannel.CheckoutChannelType.NORMAL);
+        int no = 0;
+        for (int i = 0; i < quantityOfCheckout; no++, i++) {
+            Checkout channel = new Checkout(no + 1, Checkout.CheckoutChannelType.NORMAL);
+            addCheckout(channel);
         }
         Integer quantityOfExpresswayCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfExpresswayCheckouts.getId()));
-        for (int j = 0; j < quantityOfExpresswayCheckout; i++, j++) {
-            addCheckout(i + 1, CheckoutChannel.CheckoutChannelType.EXPRESSWAY);
+        for (int i = 0; i < quantityOfExpresswayCheckout; no++, i++) {
+            Checkout channel = new Checkout(no + 1, Checkout.CheckoutChannelType.EXPRESSWAY);
+            addCheckout(channel);
         }
 
-        log("[store] ready");
-        log("[store] equipped with " + quantityOfCheckout + " checkout");
+        log("[store] ready", Level.CONFIG);
+        log("[store] equipped with " + quantityOfCheckout + " checkout", Level.CONFIG);
         if (quantityOfExpresswayCheckout > 0) {
-            log("[store] equipped with " + quantityOfExpresswayCheckout + " expressway checkout");
+            log("[store] equipped with " + quantityOfExpresswayCheckout + " expressway checkout", Level.CONFIG);
         }
     }
 
-    private CheckoutChannel getBestChannel(boolean isExpresswayAccessible) {
-        Integer min = checkoutChannels.stream()
-                .filter(c -> isExpresswayAccessible || (c.getType() == CheckoutChannel.CheckoutChannelType.NORMAL))
+    private Checkout getBestChannel(boolean isExpresswayAccessible) {
+        Integer min = checkouts.stream()
+                .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutChannelType.NORMAL))
                 .mapToInt(v -> v.getCustomers().size()).min().getAsInt();
-        List<CheckoutChannel> chooseFromList = checkoutChannels.stream()
-                .filter(c -> isExpresswayAccessible || (c.getType() == CheckoutChannel.CheckoutChannelType.NORMAL))
+        List<Checkout> chooseFromList = checkouts.stream()
+                .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutChannelType.NORMAL))
                 .filter(c -> c.getCustomers().size() == min)
                 .collect(Collectors.toList());
         int num = ThreadLocalRandom.current().nextInt(0, chooseFromList.size());
@@ -106,6 +110,7 @@ public class SimulatorController extends Controller {
         return chooseFromList.get(num);
     }
 
+    //todo change to fontawesome
     private void initBtnsEvent() {
         startButton.setOnAction(actionEvent -> {
             if (!businessStatus) {
@@ -115,23 +120,23 @@ public class SimulatorController extends Controller {
                 shutButton.setDisable(false);
                 resetButton.setDisable(true);
                 //model.outputController.clearLogList();
-                log("[store] open door");
+                log("[store] open door", Level.CONFIG);
                 return;
             }
             if (pauseStatus) {
                 startButton.setText("▶ Open door");
-                log("[store] pause");
+                log("[store] pause", Level.CONFIG);
             } else {
                 startButton.setText("▐ ▌ Pause");
                 //model.outputController.clearLogList();
-                log("[store] continue");
+                log("[store] continue", Level.CONFIG);
             }
             pauseStatus = !pauseStatus;
         });
 
         shutButton.setOnAction(actionEvent -> {
             if (businessStatus) {
-                log("[store] close door");
+                log("[store] close door", Level.CONFIG);
                 startButton.setDisable(true);
                 startButton.setText("▶ Open door");
                 shutButton.setDisable(true);
@@ -169,11 +174,6 @@ public class SimulatorController extends Controller {
     }
 
     private void initCustomerComingExecutorService() {
-        //very idle 5 comes per min  / period 12s
-        //idle 10 comes per min  / period 6s
-        //normal 20 comes per min  / period 3s
-        //busy 40 comes per min  / period 1.5s
-        //very busy 80 comes per min  / period 0.75s
         int busyDegree = Double.valueOf(props.getProperty(model.preferenceController.prefBusyDegree.getId())).intValue();
         int period;
         if (busyDegree == 0) {
@@ -215,52 +215,7 @@ public class SimulatorController extends Controller {
                     int waitSec = Integer.valueOf(mins) * 60;
 
                     Customer customer = new Customer(++customerNo, quantity, cannotWait, waitSec);
-
-                    FadeTransition fadeIn = new FadeTransition(Duration.millis(200), customer);
-                    fadeIn.setFromValue(0);
-                    fadeIn.setToValue(1);
-                    fadeIn.play();
-
-                    //choose the best checkout
-                    Integer lessThan = Integer.valueOf(props.getProperty(model.preferenceController.prefExpresswayCheckoutsForProductsLessThan.getId()));
-                    CheckoutChannel bestChannel;
-                    if (quantity <= lessThan) {
-                        bestChannel = getBestChannel(true);
-                    } else {
-                        bestChannel = getBestChannel(false);
-                    }
-
-                    Platform.runLater(() -> {
-                        log("[customer] [new] customer" + customerNo + " Goods:" + quantity + ",temper:" +
-                                (cannotWait ? "Bad, leave after " + minsText : "Good"));
-                        bestChannel.getChildren().add(customer);
-                        bestChannel.getCustomers().offer(customer);
-                    });
-
-                    if (cannotWait) {
-                        new Thread(() -> {
-                            while (true) {
-                                if (!customer.isBeingServed()) {
-                                    try {
-                                        TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                    //System.out.println("Customer" + customer.getNo() + " leave remaining: " + customer.getWaitSecRemaining());
-                                    if (customer.updateWaitSecActual(1) >= waitSec) {
-                                        Platform.runLater(() -> {
-                                            bestChannel.getChildren().remove(customer);
-                                            bestChannel.getCustomers().remove(customer);
-                                            log("[customer] [leave] customer" + customerNo
-                                                    + " leaved after waiting for " + customer.getWaitSec() + "s");
-                                        });
-                                    }
-                                } else {
-                                    break;
-                                }
-                            }
-                        }).start();
-                    }
+                    addCustomer(customer);
                 } else {
                     TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
                 }
@@ -271,11 +226,53 @@ public class SimulatorController extends Controller {
         }, period, period, TimeUnit.MICROSECONDS);
     }
 
+    private void addCustomer(Customer customer) {
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), customer);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
+
+        //choose the best checkout
+        Integer lessThan = Integer.valueOf(props.getProperty(model.preferenceController.prefExpresswayCheckoutsForProductsLessThan.getId()));
+        Checkout bestChannel;
+
+        bestChannel = getBestChannel(customer.getQuantityOfGoods() <= lessThan);
+
+        Platform.runLater(() -> {
+            log("[customer] [new] customer" + customerNo + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
+                    (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.INFO);
+            bestChannel.getChildren().add(customer);
+            bestChannel.getCustomers().offer(customer);
+        });
+
+        new Thread(() -> {
+            while (true) {
+                if (!customer.isBeingServed()) {
+                    try {
+                        TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    int waitSecActual = customer.updateWaitSecActual(1);
+                    if (customer.isCannotWait() && waitSecActual >= customer.getWaitSec()) {
+                        Platform.runLater(() -> {
+                            bestChannel.getChildren().remove(customer);
+                            bestChannel.getCustomers().remove(customer);
+                            log("[customer] [leave] customer" + customerNo
+                                    + " leaved after waiting for " + customer.getWaitSec() + "s", Level.WARNING);
+                        });
+                    }
+                } else {
+                    break;
+                }
+            }
+        }).start();
+    }
+
     //todo bug of "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 2
-    public void addCheckout(int no, int type) {
-        CheckoutChannel channel = new CheckoutChannel(no, type);
+    private void addCheckout(Checkout channel) {
         market.getChildren().add(channel);
-        checkoutChannels.add(channel);
+        checkouts.add(channel);
 
         new Thread(() -> {
             while (true) {
@@ -306,7 +303,7 @@ public class SimulatorController extends Controller {
                             Platform.runLater(() -> {
                                 channel.getChildren().remove(nowCustomer);
                                 channel.getCustomers().poll();
-                                log("[checkout] " + channel.getCounter().getNo() + " served a customer");
+                                log("[checkout] " + channel.getCounter().getNo() + " served a customer", Level.INFO);
                             });
                         }
                     } else {
@@ -328,7 +325,7 @@ public class SimulatorController extends Controller {
         });
     }
 
-    public void log(String text) {
-        model.outputController.addLog(text);
+    private void log(String text, Level level) {
+        model.outputController.addLog(text, level);
     }
 }

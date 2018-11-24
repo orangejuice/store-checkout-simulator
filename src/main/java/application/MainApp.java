@@ -40,11 +40,11 @@ public class MainApp extends Application {
         });
     }
 
-    public static Stage getPrimaryStage(){
+    public static Stage getPrimaryStage() {
         return primaryStage;
     }
 
-    private void setPrimaryStage(Stage p){
+    private void setPrimaryStage(Stage p) {
         primaryStage = p;
     }
 

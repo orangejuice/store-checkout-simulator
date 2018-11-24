@@ -38,7 +38,7 @@ public class Customer extends StackPane {
         this.quantityOfGoods = quantityOfGoods;
         this.quantityWaitForCheckout = quantityOfGoods;
         this.cannotWait = cannotWait;
-        this.waitSecActual = waitSec;
+        this.waitSecActual = 0;
         this.waitSec = waitSec;
         this.isBeingServed = false;
 
@@ -56,7 +56,7 @@ public class Customer extends StackPane {
         tooltip.setStyle("-fx-font-weight: bold");
         tooltip.setWrapText(true);
         setOnMouseMoved(mouseEvent -> {
-            tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX(), mouseEvent.getScreenY() + 15);
+            tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + 5, mouseEvent.getScreenY() + 15);
         });
         setOnMouseExited(mouseEvent -> {
             tooltip.hide();
@@ -86,6 +86,7 @@ public class Customer extends StackPane {
             tooltip.setText("Customer " + no + "\n\n" +
                     "quantity of goods: " + quantityOfGoods + "\n" +
                     "waiting for served: " + quantityWaitForCheckout + "\n" +
+                    "waiting time: " + waitSecActual + "s\n" +
                     "temper: " + (cannotWait ? "bad :(" : "good :)") +
                     (cannotWait ? "\nwill leave after:\t\t" + (waitSec - waitSecActual) : ""));
         }), 0, period, TimeUnit.MILLISECONDS);
@@ -109,6 +110,10 @@ public class Customer extends StackPane {
 
     public void setQuantityWaitForCheckout(int quantityWaitForCheckout) {
         this.quantityWaitForCheckout = quantityWaitForCheckout;
+    }
+
+    public boolean isCannotWait() {
+        return cannotWait;
     }
 
     public int getWaitSec() {

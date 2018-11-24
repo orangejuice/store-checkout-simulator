@@ -8,13 +8,13 @@ import java.util.LinkedList;
 import java.util.Queue;
 
 
-public class CheckoutChannel extends HBox {
+public class Checkout extends HBox {
     private Counter counter;
 
     private Queue<Customer> customers = new LinkedList<>();
     private int type;
 
-    public CheckoutChannel(int no, int type) {
+    public Checkout(int no, int type) {
         setMinWidth(0);
         VBox.setVgrow(this, Priority.ALWAYS);
 
@@ -23,7 +23,7 @@ public class CheckoutChannel extends HBox {
         getChildren().add(counter);
     }
 
-    public CheckoutChannel(int no) {
+    public Checkout(int no) {
         this(no, CheckoutChannelType.NORMAL);
     }
 
