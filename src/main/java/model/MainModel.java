@@ -11,4 +11,9 @@ public class MainModel {
     public PreferenceController preferenceController;
     public SimulatorController simulatorController;
 
+    private static MainModel model = new MainModel();
+
+    public static MainModel getInstance() {
+        return model;
+    }
 }

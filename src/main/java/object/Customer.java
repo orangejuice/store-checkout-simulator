@@ -19,7 +19,6 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Customer extends StackPane {
-    private ImageView customerImageView;
     private Tooltip tooltip;
     private Arc arc;
 
@@ -42,7 +41,7 @@ public class Customer extends StackPane {
         this.waitSec = waitSec;
         this.isBeingServed = false;
 
-        customerImageView = new ImageView();
+        ImageView customerImageView = new ImageView();
         customerImageView.setFitHeight(150);
         customerImageView.setFitWidth(200);
         customerImageView.setPickOnBounds(true);
@@ -54,13 +53,9 @@ public class Customer extends StackPane {
         tooltip = new Tooltip();
         tooltip.setShowDelay(Duration.ZERO);
         tooltip.setStyle("-fx-font-weight: bold");
-        tooltip.setWrapText(true);
-        setOnMouseMoved(mouseEvent -> {
-            tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + 5, mouseEvent.getScreenY() + 15);
-        });
-        setOnMouseExited(mouseEvent -> {
-            tooltip.hide();
-        });
+        setOnMouseMoved(mouseEvent -> tooltip.show((Node) mouseEvent.getSource(),
+                mouseEvent.getScreenX() + 5, mouseEvent.getScreenY() + 15));
+        setOnMouseExited(mouseEvent -> tooltip.hide());
         tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
         initTooltipService(500);
 
@@ -88,7 +83,7 @@ public class Customer extends StackPane {
                     "waiting for served: " + quantityWaitForCheckout + "\n" +
                     "waiting time: " + waitSecActual + "s\n" +
                     "temper: " + (cannotWait ? "bad :(" : "good :)") +
-                    (cannotWait ? "\nwill leave after:\t\t" + (waitSec - waitSecActual) : ""));
+                    (cannotWait ? "\nwill leave after:" + (waitSec - waitSecActual) + "s" : ""));
         }), 0, period, TimeUnit.MILLISECONDS);
     }
 

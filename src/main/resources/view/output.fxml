@@ -2,20 +2,16 @@
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.*?>
-<?import javafx.scene.text.Font?>
-<AnchorPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="controller.OutputController"
-            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-            AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
-            prefHeight="400.0" prefWidth="600.0">
-    <Label alignment="CENTER" layoutX="14.0" layoutY="14.0" style="&#10;" text="Logs"
-           textAlignment="CENTER" textFill="#9e9e9e">
-        <font>
-            <Font size="18.0"/>
-        </font>
-    </Label>
-    <ListView fx:id="logListView" layoutY="52.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-              AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="50.0"/>
-</AnchorPane>
+<VBox xmlns:fx="http://javafx.com/fxml/1" AnchorPane.bottomAnchor="0.0"
+      AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"
+      xmlns="http://javafx.com/javafx/10.0.1" fx:controller="controller.OutputController">
+    <HBox prefHeight="20" style="-fx-alignment: center; -fx-padding: 10">
+        <Label layoutX="14.0" layoutY="14.0" style="-fx-font-size: 18" text="Process"
+               textFill="#9e9e9e" minWidth="70"/>
+        <Region minWidth="10" HBox.hgrow="ALWAYS"/>
+        <ProgressBar fx:id="processBar" prefWidth="200.0" progress="0.0"/>
+    </HBox>
+    <ListView fx:id="logListView" VBox.vgrow="ALWAYS" layoutY="52.0"/>
+</VBox>

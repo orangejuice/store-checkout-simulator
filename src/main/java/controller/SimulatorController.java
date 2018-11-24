@@ -4,14 +4,15 @@ import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Paint;
 import javafx.util.Duration;
 import object.Checkout;
 import object.Customer;
+import org.joda.time.DateTime;
+import org.kordamp.ikonli.javafx.FontIcon;
 import util.PropertiesTool;
 
 import java.net.URL;
@@ -29,7 +30,7 @@ public class SimulatorController extends Controller {
     public ImageView shelf1;
     public ImageView entry;
     public ImageView shelf2;
-    public HBox background;
+    public ScrollPane background;
     public VBox market;
     public Button startButton;
     public Button shutButton;
@@ -43,16 +44,20 @@ public class SimulatorController extends Controller {
     private boolean pauseStatus;
     private Properties props;
     private int customerNo;
+    private DateTime simulateTime;
     private ScheduledExecutorService customerComingExecutorService;
+    private ScheduledExecutorService timeCountService;
     private ScheduledFuture<?> customerComingTask;
+    private ScheduledFuture<?> timeCountTask;
 
+    //todo bug of "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 2
     public void initialize(URL location, ResourceBundle resources) {
         setMarketBackgroundAutoFit();
         props = PropertiesTool.getProps();
     }
 
-    //todo add processing bar
     public void initSimulator() {
+        initBtns();
         initBtnsEvent();
         model.outputController.clearLogList();
 
@@ -66,9 +71,35 @@ public class SimulatorController extends Controller {
         playSpeedDivide = 1;
         checkouts = new LinkedList<>();
         customerComingExecutorService = Executors.newSingleThreadScheduledExecutor();
+        timeCountService = Executors.newSingleThreadScheduledExecutor();
+        simulateTime = new DateTime().secondOfDay().setCopy(0);
 
         initCheckout();
-        initCustomerComingExecutorService();
+        initCustomerComingService();
+        initTimeCountService();
+    }
+
+    private void initTimeCountService() {
+        int period = 1000000 / playSpeedDivide;
+
+        if (timeCountTask != null) {
+            timeCountTask.cancel(false);
+        }
+        timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
+            if (businessStatus && !pauseStatus) {
+                simulateTime = simulateTime.plusSeconds(1);
+            }
+            model.outputController.processBar.setProgress(simulateTime.getSecondOfDay() / 3600.0);
+        }, period, period, TimeUnit.MICROSECONDS);
+    }
+
+    private void initBtns() {
+        startButton.setGraphic(new FontIcon("fas-play"));
+        startButton.setText("open door");
+        shutButton.setGraphic(new FontIcon("fas-stop"));
+        shutButton.setText("stop");
+        resetButton.setGraphic(new FontIcon("fas-reply"));
+        resetButton.setText("start a new life");
     }
 
     private void initCheckout() {
@@ -110,25 +141,25 @@ public class SimulatorController extends Controller {
         return chooseFromList.get(num);
     }
 
-    //todo change to fontawesome
     private void initBtnsEvent() {
         startButton.setOnAction(actionEvent -> {
             if (!businessStatus) {
                 businessStatus = true;
-                startButton.setText("▐ ▌ Pause");
+                startButton.setGraphic(new FontIcon("fas-pause"));
+                startButton.setText("pause");
                 resetButton.setDisable(true);
                 shutButton.setDisable(false);
                 resetButton.setDisable(true);
-                //model.outputController.clearLogList();
                 log("[store] open door", Level.CONFIG);
                 return;
             }
             if (pauseStatus) {
-                startButton.setText("▶ Open door");
+                startButton.setGraphic(new FontIcon("fas-play"));
+                startButton.setText("open door");
                 log("[store] pause", Level.CONFIG);
             } else {
-                startButton.setText("▐ ▌ Pause");
-                //model.outputController.clearLogList();
+                startButton.setGraphic(new FontIcon("fas-pause"));
+                startButton.setText("pause");
                 log("[store] continue", Level.CONFIG);
             }
             pauseStatus = !pauseStatus;
@@ -136,11 +167,12 @@ public class SimulatorController extends Controller {
 
         shutButton.setOnAction(actionEvent -> {
             if (businessStatus) {
-                log("[store] close door", Level.CONFIG);
                 startButton.setDisable(true);
-                startButton.setText("▶ Open door");
+                startButton.setGraphic(new FontIcon("fas-play"));
+                startButton.setText("Open door");
                 shutButton.setDisable(true);
                 resetButton.setDisable(false);
+                log("[store] close door", Level.CONFIG);
             }
             businessStatus = !businessStatus;
         });
@@ -169,11 +201,13 @@ public class SimulatorController extends Controller {
             } else {
                 return;
             }
-            initCustomerComingExecutorService();
+            initCustomerComingService();
+            initTimeCountService();
+            checkouts.forEach(checkout -> checkout.getCounter().initTimeCountService(playSpeedDivide));
         });
     }
 
-    private void initCustomerComingExecutorService() {
+    private void initCustomerComingService() {
         int busyDegree = Double.valueOf(props.getProperty(model.preferenceController.prefBusyDegree.getId())).intValue();
         int period;
         if (busyDegree == 0) {
@@ -240,7 +274,7 @@ public class SimulatorController extends Controller {
 
         Platform.runLater(() -> {
             log("[customer] [new] customer" + customerNo + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
-                    (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.INFO);
+                    (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
             bestChannel.getChildren().add(customer);
             bestChannel.getCustomers().offer(customer);
         });
@@ -269,7 +303,6 @@ public class SimulatorController extends Controller {
         }).start();
     }
 
-    //todo bug of "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 2
     private void addCheckout(Checkout channel) {
         market.getChildren().add(channel);
         checkouts.add(channel);
@@ -278,8 +311,7 @@ public class SimulatorController extends Controller {
             while (true) {
                 try {
                     if (channel.getCustomers().size() > 0) {
-                        channel.getCounter().getCounterStatusCircle().setStroke(Paint.valueOf("#eae600"));
-
+                        channel.getCounter().setBusying(true, playSpeedDivide);
                         // offer poll/peek for queue
                         Customer nowCustomer = channel.getCustomers().peek();
                         nowCustomer.setBeingServed(true);
@@ -300,6 +332,7 @@ public class SimulatorController extends Controller {
 
                         // if 0, delete
                         if (waitFor == 0) {
+                            channel.getCounter().updateTotalServed(1);
                             Platform.runLater(() -> {
                                 channel.getChildren().remove(nowCustomer);
                                 channel.getCustomers().poll();
@@ -307,7 +340,7 @@ public class SimulatorController extends Controller {
                             });
                         }
                     } else {
-                        channel.getCounter().getCounterStatusCircle().setStroke(Paint.valueOf("limegreen"));
+                        channel.getCounter().setBusying(false, 0);
                         TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
                     }
                 } catch (InterruptedException e) {
@@ -318,14 +351,18 @@ public class SimulatorController extends Controller {
     }
 
     private void setMarketBackgroundAutoFit() {
-        background.widthProperty().addListener((observable, oldValue, newValue) -> {
-            shelf1.setFitWidth(newValue.doubleValue() * 100.0 / 381);
-            entry.setFitWidth(newValue.doubleValue() * 181.0 / 381);
-            shelf2.setFitWidth(newValue.doubleValue() * 100.0 / 381);
+        background.viewportBoundsProperty().addListener((observable, oldValue, newValue) -> {
+            shelf1.setFitWidth(newValue.getWidth() * 100.0 / 381);
+            entry.setFitWidth(newValue.getWidth() * 181.0 / 381);
+            shelf2.setFitWidth(newValue.getWidth() * 100.0 / 381);
         });
     }
 
     private void log(String text, Level level) {
         model.outputController.addLog(text, level);
+    }
+
+    public DateTime getSimulateTime() {
+        return simulateTime;
     }
 }

@@ -15,12 +15,13 @@
 2. logs panel
 3. process visualization.
 4. normal/expressway support
+5. real-time detail available (mouse hover) 
 5. human-simulation: auto get the best channel logic
 5. human-simulation: temper good/bad
 5. processing bar
 6. record:
-    - total wait time for each customer //TODO add
-    - total utilization for each checkout //TODO add
+    - total wait time for each customer
+    - total utilization for each checkout
     - total products processed //TODO add
     - average customer wait time //TODO add
     - average checkout utilization //TODO add

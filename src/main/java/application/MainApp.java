@@ -28,7 +28,7 @@ public class MainApp extends Application {
 
         stage.setTitle("Checkout Simulator");
         stage.setScene(scene);
-        stage.setMinWidth(root.prefHeight(Parent.BASELINE_OFFSET_SAME_AS_HEIGHT));
+        stage.setMinWidth(root.prefWidth(Parent.BASELINE_OFFSET_SAME_AS_HEIGHT));
         stage.setMinHeight(root.prefHeight(Parent.BASELINE_OFFSET_SAME_AS_HEIGHT));
         stage.setHeight(root.prefHeight(Parent.BASELINE_OFFSET_SAME_AS_HEIGHT));
         stage.setWidth(root.prefWidth(Parent.BASELINE_OFFSET_SAME_AS_HEIGHT));

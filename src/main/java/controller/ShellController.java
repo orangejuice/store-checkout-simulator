@@ -31,7 +31,7 @@ public class ShellController extends Controller {
 
 
     public void initialize(URL location, ResourceBundle resources) {
-        model = new MainModel();
+        model = MainModel.getInstance();
         model.shellController = this;
 
         try {

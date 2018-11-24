@@ -4,6 +4,7 @@ module checkout {
     requires org.kordamp.iconli.core;
     requires org.kordamp.ikonli.javafx;
     requires java.logging;
+    requires joda.time;
 
     opens application to javafx.graphics;
     opens controller to javafx.fxml;

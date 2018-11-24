@@ -10,8 +10,8 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
-import javafx.scene.text.TextAlignment;
 import javafx.util.Duration;
+import org.joda.time.DateTime;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,26 +19,28 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Counter extends StackPane {
-    private ImageView counterImageView;
     private Circle counterStatusCircle;
     private Tooltip tooltip;
 
     private int no;
     private boolean status;
+    private boolean busying;
     private int type;
     private int totalServed;
-    private int totalServedSec;
+    private DateTime totalServedTime;
     private ScheduledExecutorService tooltipUpdateExecutorService;
     private ScheduledFuture<?> tooltipUpdateTask;
+    private ScheduledExecutorService timeCountService;
+    private ScheduledFuture<?> timeCountTask;
 
     public Counter(int no, int type, boolean status) {
         this.no = no;
         this.status = status;
         this.type = type;
         totalServed = 0;
-        totalServedSec = 0;
+        totalServedTime = new DateTime().secondOfDay().setCopy(0);
 
-        counterImageView = new ImageView();
+        ImageView counterImageView = new ImageView();
         counterImageView.setFitHeight(150);
         counterImageView.setFitWidth(200);
         counterImageView.setPickOnBounds(true);
@@ -48,7 +50,6 @@ public class Counter extends StackPane {
 
         tooltip = new Tooltip();
         tooltip.setShowDelay(Duration.ZERO);
-        tooltip.setTextAlignment(TextAlignment.JUSTIFY);
         tooltip.setStyle("-fx-font-weight: bold");
         setOnMouseMoved(mouseEvent -> {
             tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + 5, mouseEvent.getScreenY() + 15);
@@ -57,10 +58,10 @@ public class Counter extends StackPane {
             tooltip.hide();
         });
         tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
+        timeCountService = Executors.newSingleThreadScheduledExecutor();
         initTooltipService(500);
 
         counterStatusCircle = new Circle();
-        counterStatusCircle.setStroke(Paint.valueOf("limegreen"));
         counterStatusCircle.setStrokeWidth(25.0);
         StackPane.setAlignment(counterStatusCircle, Pos.TOP_RIGHT);
 
@@ -75,6 +76,33 @@ public class Counter extends StackPane {
             label.setText(String.valueOf(no));
         }
         getChildren().addAll(counterImageView, counterStatusCircle, label);
+        setBusying(false, 0);
+    }
+
+    public void setBusying(boolean busyingStatus, int playSpeedDivide) {
+        if (busyingStatus == busying) {
+            return;
+        }
+        busying = busyingStatus;
+        if (busyingStatus) {
+            counterStatusCircle.setStroke(Paint.valueOf("#eae600"));
+            initTimeCountService(playSpeedDivide);
+        } else {
+            counterStatusCircle.setStroke(Paint.valueOf("limegreen"));
+            initTimeCountService(0);
+        }
+    }
+
+    public void initTimeCountService(int playSpeedDivide) {
+        if (timeCountTask != null) {
+            timeCountTask.cancel(false);
+        }
+        if (playSpeedDivide != 0) {
+            int period = 1000000 / playSpeedDivide;
+            timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
+                totalServedTime = totalServedTime.plusSeconds(1);
+            }, period, period, TimeUnit.MICROSECONDS);
+        }
     }
 
     public void initTooltipService(long period) {
@@ -83,9 +111,9 @@ public class Counter extends StackPane {
         }
         tooltipUpdateTask = tooltipUpdateExecutorService.scheduleAtFixedRate(() -> Platform.runLater(() -> {
             tooltip.setText("Checkout " + no + "\n\n" +
-                    "open: " + status + "\n" +
+                    "status: " + (status ? "busying" : "idle") + "\n" +
                     "served customers: " + totalServed + "\n" +
-                    "valid time: " + totalServedSec + "s\n" +
+                    "valid time: " + totalServedTime.getSecondOfDay() + "s\n" +
                     "type: " + (type == Checkout.CheckoutChannelType.NORMAL ? "normal" : "expressway"));
         }), 0, period, TimeUnit.MILLISECONDS);
     }
@@ -110,7 +138,4 @@ public class Counter extends StackPane {
         return totalServed += plus;
     }
 
-    public int updateTotalServedSec(int plusSec) {
-        return totalServedSec += plusSec;
-    }
 }

@@ -2,9 +2,8 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<BorderPane xmlns:fx="http://javafx.com/fxml/1" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity"
-            minWidth="-Infinity" prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/10.0.1"
-            fx:controller="controller.ShellController">
+<BorderPane xmlns:fx="http://javafx.com/fxml/1" prefHeight="600.0" prefWidth="800.0"
+            xmlns="http://javafx.com/javafx/10.0.1" fx:controller="controller.ShellController">
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <Menu mnemonicParsing="false" text="File">
@@ -28,11 +27,9 @@
                 <AnchorPane fx:id="preferenceContainer"/>
             </Tab>
             <Tab text="Simulation" fx:id="simulationTab">
-                <!--<AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0"/>-->
                 <SplitPane dividerPositions="0.5" prefHeight="160.0" prefWidth="200.0" BorderPane.alignment="CENTER">
                     <AnchorPane fx:id="mainContainer"/>
-                    <AnchorPane fx:id="sideContainer" maxWidth="400.0" minWidth="240.0" prefHeight="500.0"
-                                prefWidth="300.0"/>
+                    <AnchorPane fx:id="sideContainer" maxWidth="500.0" minWidth="240.0" prefWidth="300.0"/>
                 </SplitPane>
             </Tab>
             <Tab text="Statistics" fx:id="statisticsTab">
