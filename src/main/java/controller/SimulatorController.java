@@ -54,24 +54,22 @@ public class SimulatorController extends Controller {
     public void initialize(URL location, ResourceBundle resources) {
         setMarketBackgroundAutoFit();
         props = PropertiesTool.getProps();
+
+        customerComingExecutorService = Executors.newSingleThreadScheduledExecutor();
+        timeCountService = Executors.newSingleThreadScheduledExecutor();
     }
 
     public void initSimulator() {
         initBtns();
         initBtnsEvent();
         model.outputController.clearLogList();
+        model.outputController.processBar.setProgress(0);
 
-        startButton.setDisable(false);
-        shutButton.setDisable(true);
-        resetButton.setDisable(true);
         businessStatus = false;
         pauseStatus = false;
         customerNo = 0;
         playSpeed.valueProperty().set(0);
         playSpeedDivide = 1;
-        checkouts = new LinkedList<>();
-        customerComingExecutorService = Executors.newSingleThreadScheduledExecutor();
-        timeCountService = Executors.newSingleThreadScheduledExecutor();
         simulateTime = new DateTime().secondOfDay().setCopy(0);
 
         initCheckout();
@@ -79,6 +77,7 @@ public class SimulatorController extends Controller {
         initTimeCountService();
     }
 
+    //todo customer stop to come
     private void initTimeCountService() {
         int period = 1000000 / playSpeedDivide;
 
@@ -88,12 +87,16 @@ public class SimulatorController extends Controller {
         timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
             if (businessStatus && !pauseStatus) {
                 simulateTime = simulateTime.plusSeconds(1);
+                model.outputController.processBar.setProgress(simulateTime.getSecondOfDay() / 3600.0);
             }
-            model.outputController.processBar.setProgress(simulateTime.getSecondOfDay() / 3600.0);
         }, period, period, TimeUnit.MICROSECONDS);
     }
 
     private void initBtns() {
+        startButton.setDisable(false);
+        shutButton.setDisable(true);
+        resetButton.setDisable(true);
+
         startButton.setGraphic(new FontIcon("fas-play"));
         startButton.setText("open door");
         shutButton.setGraphic(new FontIcon("fas-stop"));
@@ -108,7 +111,7 @@ public class SimulatorController extends Controller {
                 market.getChildren().remove(node);
             }
         });
-
+        checkouts = new LinkedList<>();
         Integer quantityOfCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfCheckouts.getId()));
         int no = 0;
         for (int i = 0; i < quantityOfCheckout; no++, i++) {
@@ -154,13 +157,14 @@ public class SimulatorController extends Controller {
                 return;
             }
             if (pauseStatus) {
-                startButton.setGraphic(new FontIcon("fas-play"));
-                startButton.setText("open door");
-                log("[store] pause", Level.CONFIG);
-            } else {
+                // to continue
                 startButton.setGraphic(new FontIcon("fas-pause"));
                 startButton.setText("pause");
                 log("[store] continue", Level.CONFIG);
+            } else {
+                startButton.setGraphic(new FontIcon("fas-play"));
+                startButton.setText("continue");
+                log("[store] pause", Level.CONFIG);
             }
             pauseStatus = !pauseStatus;
         });
@@ -223,7 +227,6 @@ public class SimulatorController extends Controller {
         } else {
             period = 3000000 / playSpeedDivide;
         }
-
         if (customerComingTask != null) {
             customerComingTask.cancel(false);
         }
@@ -256,7 +259,6 @@ public class SimulatorController extends Controller {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-
         }, period, period, TimeUnit.MICROSECONDS);
     }
 
@@ -275,7 +277,7 @@ public class SimulatorController extends Controller {
         Platform.runLater(() -> {
             log("[customer] [new] customer" + customerNo + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
                     (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
-            bestChannel.getChildren().add(customer);
+//            bestChannel.getChildren().add(customer);
             bestChannel.getCustomers().offer(customer);
         });
 
@@ -290,8 +292,8 @@ public class SimulatorController extends Controller {
                     int waitSecActual = customer.updateWaitSecActual(1);
                     if (customer.isCannotWait() && waitSecActual >= customer.getWaitSec()) {
                         Platform.runLater(() -> {
-                            bestChannel.getChildren().remove(customer);
                             bestChannel.getCustomers().remove(customer);
+//                            bestChannel.getChildren().remove(customer);
                             log("[customer] [leave] customer" + customerNo
                                     + " leaved after waiting for " + customer.getWaitSec() + "s", Level.WARNING);
                         });
@@ -334,7 +336,7 @@ public class SimulatorController extends Controller {
                         if (waitFor == 0) {
                             channel.getCounter().updateTotalServed(1);
                             Platform.runLater(() -> {
-                                channel.getChildren().remove(nowCustomer);
+//                                channel.getChildren().remove(nowCustomer);
                                 channel.getCustomers().poll();
                                 log("[checkout] " + channel.getCounter().getNo() + " served a customer", Level.INFO);
                             });

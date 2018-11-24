@@ -40,6 +40,24 @@ public class ShellController extends Controller {
             e.printStackTrace();
         }
 
+        try {
+            loadView("simulator.fxml", mainContainer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            loadView("output.fxml", sideContainer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            loadView("statistics.fxml", statisticsContainer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         setStep(0);
         stepTabPane.getSelectionModel().select(preferencesTab);
 
@@ -62,28 +80,10 @@ public class ShellController extends Controller {
                 break;
             case 1:
                 simulationTab.setDisable(false);
-
-                try {
-                    loadView("simulator.fxml", mainContainer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-                try {
-                    loadView("output.fxml", sideContainer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
                 model.simulatorController.initSimulator();
                 break;
             case 2:
                 statisticsTab.setDisable(false);
-
-                try {
-                    loadView("statistics.fxml", statisticsContainer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
         }
     }
 
