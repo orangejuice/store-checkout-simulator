@@ -38,9 +38,7 @@ public class OutputController extends Controller {
         }
 
         List<String> names = model.checkouts.stream().map(checkout -> "checkout" + checkout.getCounter().getNo()).collect(Collectors.toList());
-        model.statisticsController.initStatistics();
-        model.statisticsController.initWaitTimeEachCustomerScatter(names);
-        model.statisticsController.initUtilizationEachCheckoutBar(names);
+        model.statisticsController.initStatistics(names);
     }
 
     public void customerComeEvent(Customer customer) {

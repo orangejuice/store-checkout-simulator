@@ -76,9 +76,18 @@
                         <NumberAxis side="LEFT"/>
                     </yAxis>
                 </BarChart>
+                <LineChart fx:id="totalProductionProcessedLine">
+                    <xAxis>
+                        <NumberAxis side="BOTTOM"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis side="LEFT"/>
+                    </yAxis>
+                </LineChart>
             </FlowPane>
             <TextField layoutX="10.0" layoutY="97.0" style="-fx-font-weight: bold" styleClass="copyable-label"
                        text="record"/>
+            <TextArea fx:id="recordDetail" styleClass="copyable-label"/>
         </VBox>
     </ScrollPane>
 </AnchorPane>

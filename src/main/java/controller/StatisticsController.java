@@ -3,11 +3,9 @@ package controller;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
-import javafx.scene.chart.BarChart;
-import javafx.scene.chart.PieChart;
-import javafx.scene.chart.ScatterChart;
-import javafx.scene.chart.XYChart;
+import javafx.scene.chart.*;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import object.Customer;
 import org.joda.time.DateTime;
@@ -17,6 +15,7 @@ import util.PropertiesTool;
 import java.net.URL;
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -35,12 +34,15 @@ public class StatisticsController extends Controller {
     public TextField ExpresswayCheckoutsFor;
     public TextField rangeOfScanTime;
     public TextField date;
+    public LineChart totalProductionProcessedLine;
+    public TextArea recordDetail;
 
     private Properties props = PropertiesTool.getProps();
     private ObservableList<PieChart.Data> waitTimeDistributionPieData;
     private Map<String, Integer> waitTimeDistributionPieMap;
     private ScheduledFuture<?> timeTask;
     private int hasProcessedCustomers;
+    private Map<String, Integer> hasProcessedProductsMinute;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -58,9 +60,14 @@ public class StatisticsController extends Controller {
         utilizationEachCheckoutBar.getXAxis().setLabel("checkout(no)");
         utilizationEachCheckoutBar.getYAxis().setLabel("utilization(%)");
         utilizationEachCheckoutBar.setLegendSide(Side.RIGHT);
+
+        totalProductionProcessedLine.setTitle("products processed per minute");
+        totalProductionProcessedLine.getXAxis().setLabel("minute");
+        totalProductionProcessedLine.getYAxis().setLabel("products(quantity)");
+        totalProductionProcessedLine.setLegendSide(Side.RIGHT);
     }
 
-    public void initStatistics() {
+    public void initStatistics(List<String> names) {
         String extend = props.getProperty(model.preferenceController.prefBusyDegree.getId());
         String leaveAfter = props.getProperty(model.preferenceController.prefCustomerWillLeaveAfterWaitingFor.getId());
         String expresswayForLessThan = props.getProperty(model.preferenceController.prefExpresswayCheckoutsForProductsLessThan.getId());
@@ -82,8 +89,12 @@ public class StatisticsController extends Controller {
         date.setText("date: " + DateTimeFormat.forPattern("EEEE, dd MMMM yyyy (ZZZ)").print(new DateTime()));
         ReportPane.setVvalue(0.3);
         initWaitTimeDistributionPie();
+        initWaitTimeEachCustomerScatter(names);
+        initUtilizationEachCheckoutBar(names);
+        initTotalProductionProcessedLine(names);
 
         hasProcessedCustomers = 0;
+        hasProcessedProductsMinute = names.stream().collect(Collectors.toMap(s -> s, s -> 1));
     }
 
     public void initStatisticsTask() {
@@ -116,23 +127,36 @@ public class StatisticsController extends Controller {
             model.checkouts.forEach(checkout -> {
                 double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
                 updateUtilizationEachCheckoutBar(checkout.getCounter().getNo(), v);
+
+                Map<Integer, Integer> totalServed = checkout.getCounter().getTotalServedProducts();
+                int minute = model.simulatorController.getSimulateTime().getMinuteOfDay() + 1;
+
+                Integer lastTimeMinute = hasProcessedProductsMinute.get("checkout" + checkout.getCounter().getNo());
+
+                if (minute != lastTimeMinute) {
+                    updateTotalProductionProcessedLine(checkout.getCounter().getNo(), minute - 1, totalServed.getOrDefault(minute - 1, 0));
+                    hasProcessedProductsMinute.put("checkout" + checkout.getCounter().getNo(), minute);
+                } else {
+                    updateTotalProductionProcessedLine(checkout.getCounter().getNo(), minute, totalServed.getOrDefault(minute, 0));
+                }
             });
             hasProcessedCustomers = model.leftCustomers.size();
         }, 0, 1, TimeUnit.SECONDS);
-//        model.getThreadPoolExecutor().execute(() -> {
-//            try {
-//                System.out.println("hello1");
-//                timeTask.get();
-//                System.out.println("hello2");
-//            } catch (ExecutionException | InterruptedException e) {
-//                e.printStackTrace();
-//            }
-//        });
+        model.getThreadPoolExecutor().execute(() -> {
+            try {
+                timeTask.get();
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     public void cancelStatisticsTask() {
-        timeTask.cancel(false);
+        if (timeTask != null) {
+            timeTask.cancel(false);
+        }
         date.setText(date.getText() + "   end: " + DateTimeFormat.forPattern("HH:mm:ss").print(new DateTime()));
+        recordDetail.setText("dasdasdasdas\nsasfasa");
     }
 
     public void initWaitTimeEachCustomerScatter(List<String> names) {
@@ -140,8 +164,10 @@ public class StatisticsController extends Controller {
                 .stream().map(name -> {
                     XYChart.Series series = new XYChart.Series();
                     series.setName(name);
+                    series.getData().add(new XYChart.Data<>(0, 0));
                     return series;
                 }).collect(Collectors.toList()));
+        waitTimeEachCustomerScatter.getData().forEach(o -> ((XYChart.Series) o).getData().clear());
     }
 
     public void updateWaitTimeEachCustomerScatter(int checkoutNo, int customerNo, int sec) {
@@ -154,6 +180,7 @@ public class StatisticsController extends Controller {
 
     public void initUtilizationEachCheckoutBar(List<String> names) {
         XYChart.Series series = new XYChart.Series();
+        series.setName("utilization");
         series.getData().setAll(names
                 .stream().map(name -> {
                     XYChart.Data<String, Double> data = new XYChart.Data<>();
@@ -198,7 +225,26 @@ public class StatisticsController extends Controller {
         }
     }
 
-    public ScheduledFuture<?> getTimeTask() {
-        return timeTask;
+    public void initTotalProductionProcessedLine(List<String> names) {
+        totalProductionProcessedLine.getData().setAll(names
+                .stream().map(name -> {
+                    XYChart.Series series = new XYChart.Series();
+                    series.setName(name);
+                    return series;
+                }).collect(Collectors.toList()));
     }
+
+    public void updateTotalProductionProcessedLine(int checkoutNo, int minute, int quantity) {
+        totalProductionProcessedLine.getData().stream()
+                .filter(series -> ((XYChart.Series) series).getName().equals("checkout" + checkoutNo))
+                .findFirst().ifPresent(series -> ((XYChart.Series) series).getData()
+                .stream().filter(data -> (Integer) ((XYChart.Data) data).getXValue() == minute)
+                .findFirst().ifPresentOrElse(data -> Platform.runLater(() -> {
+                    ((XYChart.Data) data).setYValue(quantity);
+                }), () -> Platform.runLater(() -> {
+                    ((XYChart.Series) series).getData().add(new XYChart.Data<>(minute, quantity));
+                })))
+        ;
+    }
+
 }

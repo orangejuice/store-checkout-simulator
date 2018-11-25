@@ -41,7 +41,6 @@ public class SimulatorController extends Controller {
 
     private int playSpeedDivide;
     private boolean businessStatus;
-    private boolean pauseStatus;
     private Properties props;
     private int customerNo;
     private DateTime simulateTime;
@@ -61,7 +60,7 @@ public class SimulatorController extends Controller {
         initBtnsEvent();
 
         businessStatus = false;
-        pauseStatus = false;
+        model.pauseStatus = false;
         customerNo = 0;
         playSpeed.valueProperty().set(0);
         playSpeedDivide = 1;
@@ -71,7 +70,6 @@ public class SimulatorController extends Controller {
 
         initCheckout();
         initCustomerComingService();
-        initTimeCountService();
         if (finishSimulationTask != null) {
             finishSimulationTask.cancel(false);
         }
@@ -84,9 +82,9 @@ public class SimulatorController extends Controller {
             timeCountTask.cancel(false);
         }
         timeCountTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
-            if (businessStatus && !pauseStatus) {
+            if (!model.pauseStatus) {
                 simulateTime = simulateTime.plusSeconds(1);
-                if (simulateTime.getHourOfDay() >= 1) {
+                if (simulateTime.getHourOfDay() >= 1 && finishSimulationTask == null) {
                     Platform.runLater(this::finishSimulation);
                 }
                 model.outputController.processBar.setProgress(simulateTime.getSecondOfDay() / 3600.0);
@@ -148,10 +146,11 @@ public class SimulatorController extends Controller {
                 shutButton.setDisable(false);
                 resetButton.setDisable(true);
                 model.outputController.addLog("[store] open door", Level.CONFIG);
+                initTimeCountService();
                 model.statisticsController.initStatisticsTask();
                 return;
             }
-            if (pauseStatus) {
+            if (model.pauseStatus) {
                 // to continue
                 startButton.setGraphic(new FontIcon("fas-pause"));
                 startButton.setText("pause");
@@ -161,13 +160,12 @@ public class SimulatorController extends Controller {
                 startButton.setText("continue");
                 model.outputController.addLog("[store] pause", Level.CONFIG);
             }
-            pauseStatus = !pauseStatus;
+            model.pauseStatus = !model.pauseStatus;
         });
 
         shutButton.setOnAction(actionEvent -> {
             if (businessStatus) {
                 finishSimulation();
-                resetButton.setDisable(false);
             }
             businessStatus = !businessStatus;
         });
@@ -207,6 +205,8 @@ public class SimulatorController extends Controller {
         startButton.setText("Open door");
         shutButton.setDisable(true);
         resetButton.setDisable(false);
+        businessStatus = !businessStatus;
+        customerComingTask.cancel(false);
         model.outputController.addLog("[store] close entry, no new customers from now.", Level.CONFIG);
         model.outputController.addLog("[store] for whole report please wait util all customers have left!", Level.CONFIG);
         finishSimulationTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
@@ -240,31 +240,27 @@ public class SimulatorController extends Controller {
             customerComingTask.cancel(false);
         }
         customerComingTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
-            try {
-                if (businessStatus && !pauseStatus) {
-                    //quantity of goods
-                    Integer quantityFrom = Integer.valueOf(props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerFrom.getId()));
-                    Integer quantityTo = Integer.valueOf(props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerTo.getId()));
-                    int quantity = ThreadLocalRandom.current().nextInt(quantityFrom, quantityTo + 1);
+            if (businessStatus && !model.pauseStatus) {
+                //quantity of goods
+                Integer quantityFrom = Integer.valueOf(props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerFrom.getId()));
+                Integer quantityTo = Integer.valueOf(props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerTo.getId()));
+                int quantity = ThreadLocalRandom.current().nextInt(quantityFrom, quantityTo + 1);
 
-                    //temper
-                    double temper = Math.random();
-                    double temperDivide = 0;
-                    try {
-                        temperDivide = new DecimalFormat("0.0#%").parse(props.getProperty(model.preferenceController.prefPercentageOfACustomerWhoCantWait.getId())).doubleValue();
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                    boolean cannotWait = temper < temperDivide;
-                    String minsText = props.getProperty(model.preferenceController.prefCustomerWillLeaveAfterWaitingFor.getId());
-                    String mins = minsText.replaceAll("mins", "");
-                    int waitSec = Integer.valueOf(mins) * 60;
-
-                    Customer customer = new Customer(++customerNo, quantity, cannotWait, waitSec);
-                    addCustomer(customer);
+                //temper
+                double temper = Math.random();
+                double temperDivide = 0;
+                try {
+                    temperDivide = new DecimalFormat("0.0#%").parse(props.getProperty(model.preferenceController.prefPercentageOfACustomerWhoCantWait.getId())).doubleValue();
+                } catch (ParseException e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
+                boolean cannotWait = temper < temperDivide;
+                String minsText = props.getProperty(model.preferenceController.prefCustomerWillLeaveAfterWaitingFor.getId());
+                String mins = minsText.replaceAll("mins", "");
+                int waitSec = Integer.valueOf(mins) * 60;
+
+                Customer customer = new Customer(++customerNo, quantity, cannotWait, waitSec);
+                addCustomer(customer);
             }
         }, period, period, TimeUnit.MICROSECONDS);
     }

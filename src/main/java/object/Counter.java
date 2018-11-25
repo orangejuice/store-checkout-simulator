@@ -15,6 +15,8 @@ import model.MainModel;
 import org.joda.time.DateTime;
 import util.PropertiesTool;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -27,7 +29,8 @@ public class Counter extends StackPane {
     private boolean status;
     private boolean busying;
     private int type;
-    private int totalServed;
+    private int totalServedCustomers;
+    private Map<Integer, Integer> totalServedProducts;
     private DateTime totalServedTime;
     private ScheduledFuture<?> tooltipUpdateTask;
     private ScheduledFuture<?> timeCountTask;
@@ -37,9 +40,10 @@ public class Counter extends StackPane {
         this.no = no;
         this.status = status;
         this.type = type;
-        totalServed = 0;
+        totalServedCustomers = 0;
 
         totalServedTime = new DateTime().secondOfDay().setCopy(0);
+        totalServedProducts = new HashMap<>();
         initTooltipService(500);
         initScanService(1000000);
 
@@ -87,39 +91,47 @@ public class Counter extends StackPane {
         int playSpeedDivide = MainModel.getInstance().simulatorController.getPlaySpeedDivide();
         int period = scanItemInterval / playSpeedDivide;
         scanTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> {
-            Checkout channel = ((Checkout) getParent());
-            if (channel.getCustomers().size() > 0) {
-                channel.getCounter().setBusying(true, playSpeedDivide);
-                // offer poll/peek for queue
-                Customer nowCustomer = channel.getCustomers().peek();
-                nowCustomer.setBeingServed(true);
+            if (!MainModel.getInstance().pauseStatus) {
+                Checkout channel = ((Checkout) getParent());
+                if (channel.getCustomers().size() > 0) {
+                    setBusying(true, playSpeedDivide);
+                    // offer poll/peek for queue
+                    Customer nowCustomer = channel.getCustomers().peek();
+                    nowCustomer.setBeingServed(true);
 
-                int total = nowCustomer.getQuantityOfGoods();
-                int waitFor = nowCustomer.getQuantityWaitForCheckout();
+                    int total = nowCustomer.getQuantityOfGoods();
+                    int waitFor = nowCustomer.getQuantityWaitForCheckout();
 
-                // scan goods
-                Double from = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeFrom.getId()));
-                Double to = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeTo.getId()));
-                double v = ThreadLocalRandom.current().nextDouble(from, to);
+                    // scan goods
+                    Double from = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeFrom.getId()));
+                    Double to = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeTo.getId()));
+                    double v = ThreadLocalRandom.current().nextDouble(from, to);
+                    initScanService((int) (v * 1000000));
 
-                initScanService((int) (v * 1000000));
-                nowCustomer.setQuantityWaitForCheckout(--waitFor);
+                    int minute = MainModel.getInstance().simulatorController.getSimulateTime().getMinuteOfDay() + 1;
+                    if (totalServedProducts.containsKey(minute)) {
+                        totalServedProducts.compute(minute, (integer, integer2) -> integer2 + 1);
+                    } else {
+                        totalServedProducts.put(minute, 1);
+                    }
+                    nowCustomer.setQuantityWaitForCheckout(--waitFor);
 
-                // change the arc
-                nowCustomer.getArc().setLength(360.0 * waitFor / total);
+                    // change the arc
+                    nowCustomer.getArc().setLength(360.0 * waitFor / total);
 
-                // if 0, delete
-                if (waitFor == 0) {
-                    channel.getCounter().updateTotalServed(1);
-                    Customer customer = channel.getCustomers().poll();
-                    MainModel.getInstance().leftCustomers.add(customer);
-                    MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
-                    //todo Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
-                    customer.leave();
+                    // if 0, delete
+                    if (waitFor == 0) {
+                        totalServedCustomers += 1;
+                        Customer customer = channel.getCustomers().poll();
+                        MainModel.getInstance().leftCustomers.add(customer);
+                        MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
+                        //todo Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
+                        customer.leave();
+                    }
+                } else {
+                    setBusying(false, 0);
+                    initScanService(1000000);
                 }
-            } else {
-                setBusying(false, 0);
-                initScanService(1000000);
             }
         }, period, period, TimeUnit.MICROSECONDS);
     }
@@ -161,7 +173,7 @@ public class Counter extends StackPane {
         tooltipUpdateTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> Platform.runLater(() -> {
             tooltip.setText("Checkout " + no + "\n\n" +
                     "status: " + (status ? "busying" : "idle") + "\n" +
-                    "served customers: " + totalServed + "\n" +
+                    "served customers: " + totalServedCustomers + "\n" +
                     "valid time: " + totalServedTime.getSecondOfDay() + "s\n" +
                     "type: " + (type == Checkout.CheckoutType.NORMAL ? "normal" : "expressway"));
         }), 0, period, TimeUnit.MILLISECONDS);
@@ -191,8 +203,11 @@ public class Counter extends StackPane {
         return totalServedTime;
     }
 
-    public void updateTotalServed(int plus) {
-        totalServed += plus;
+    public int getTotalServedCustomers() {
+        return totalServedCustomers;
     }
 
+    public Map<Integer, Integer> getTotalServedProducts() {
+        return totalServedProducts;
+    }
 }

@@ -20,6 +20,7 @@ public class MainModel {
     private static MainModel model = new MainModel();
     public List<Checkout> checkouts = new LinkedList<>();
     public List<Customer> leftCustomers = new LinkedList<>();
+    public boolean pauseStatus;
 
     static {
         threadPoolExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(100);
