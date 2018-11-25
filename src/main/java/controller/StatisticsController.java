@@ -9,6 +9,7 @@ import javafx.scene.chart.ScatterChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import object.Customer;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import util.PropertiesTool;
@@ -39,6 +40,7 @@ public class StatisticsController extends Controller {
     private ObservableList<PieChart.Data> waitTimeDistributionPieData;
     private Map<String, Integer> waitTimeDistributionPieMap;
     private ScheduledFuture<?> timeTask;
+    private int hasProcessedCustomers;
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -46,7 +48,6 @@ public class StatisticsController extends Controller {
         waitTimeDistributionPie.setLegendSide(Side.RIGHT);
         waitTimeDistributionPieData = waitTimeDistributionPie.getData();
         waitTimeDistributionPieMap = new HashMap<>();
-        initWaitTimeDistributionPie();
 
         waitTimeEachCustomerScatter.setTitle("each customer wait time");
         waitTimeEachCustomerScatter.getXAxis().setLabel("customer(no)");
@@ -80,17 +81,62 @@ public class StatisticsController extends Controller {
         rangeOfScanTime.setText(MessageFormat.format("range of each product scan time: from {0} to {1}", scanFrom, scanTo));
         date.setText("date: " + DateTimeFormat.forPattern("EEEE, dd MMMM yyyy (ZZZ)").print(new DateTime()));
         ReportPane.setVvalue(0.3);
-        initTimeTask();
+        initWaitTimeDistributionPie();
+
+        hasProcessedCustomers = 0;
     }
 
-    private void initTimeTask() {
+    public void initStatisticsTask() {
+        if (timeTask != null) {
+            timeTask.cancel(false);
+        }
+        date.setText(date.getText() + "   start: " + DateTimeFormat.forPattern("HH:mm:ss").print(new DateTime()));
         timeTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
+            String waitSecPeriod;
+            for (int i = hasProcessedCustomers; i < model.leftCustomers.size(); i++) {
+                Customer customer = model.leftCustomers.get(i);
+                if (customer.isCannotWait() && (customer.getWaitSecActual() >= customer.getWaitSec())) {
+                    waitSecPeriod = "leave";
+                } else if (customer.getWaitSecActual() <= 60) {
+                    waitSecPeriod = "<1min";
+                } else if (customer.getWaitSecActual() <= 300) {
+                    waitSecPeriod = "1-5min";
+                } else if (customer.getWaitSecActual() <= 600) {
+                    waitSecPeriod = "5-10min";
+                } else if (customer.getWaitSecActual() <= 900) {
+                    waitSecPeriod = "10-15min";
+                } else if (customer.getWaitSecActual() <= 1200) {
+                    waitSecPeriod = "15-20min";
+                } else {
+                    waitSecPeriod = ">20min";
+                }
+                updateWaitTimeDistributionPie(waitSecPeriod);
+                updateWaitTimeEachCustomerScatter(customer.parent.getCounter().getNo(), customer.getNo(), customer.getWaitSecActual());
+            }
+            model.checkouts.forEach(checkout -> {
+                double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
+                updateUtilizationEachCheckoutBar(checkout.getCounter().getNo(), v);
+            });
+            hasProcessedCustomers = model.leftCustomers.size();
+        }, 0, 1, TimeUnit.SECONDS);
+//        model.getThreadPoolExecutor().execute(() -> {
+//            try {
+//                System.out.println("hello1");
+//                timeTask.get();
+//                System.out.println("hello2");
+//            } catch (ExecutionException | InterruptedException e) {
+//                e.printStackTrace();
+//            }
+//        });
+    }
 
-        }, 0, 1000, TimeUnit.SECONDS);
+    public void cancelStatisticsTask() {
+        timeTask.cancel(false);
+        date.setText(date.getText() + "   end: " + DateTimeFormat.forPattern("HH:mm:ss").print(new DateTime()));
     }
 
     public void initWaitTimeEachCustomerScatter(List<String> names) {
-        waitTimeEachCustomerScatter.getData().addAll(names
+        waitTimeEachCustomerScatter.getData().setAll(names
                 .stream().map(name -> {
                     XYChart.Series series = new XYChart.Series();
                     series.setName(name);
@@ -108,7 +154,7 @@ public class StatisticsController extends Controller {
 
     public void initUtilizationEachCheckoutBar(List<String> names) {
         XYChart.Series series = new XYChart.Series();
-        series.getData().addAll(names
+        series.getData().setAll(names
                 .stream().map(name -> {
                     XYChart.Data<String, Double> data = new XYChart.Data<>();
                     data.setXValue(name);
@@ -143,12 +189,16 @@ public class StatisticsController extends Controller {
         waitTimeDistributionPieMap.put("leave", 0);
     }
 
-    public void updateWaitTimeDistributionPieAddNewData(String key) {
+    public void updateWaitTimeDistributionPie(String key) {
         waitTimeDistributionPieMap.put(key, waitTimeDistributionPieMap.get(key) + 1);
         int total = waitTimeDistributionPieMap.values().stream().mapToInt(Integer::intValue).sum();
         for (PieChart.Data d : waitTimeDistributionPieData) {
             double v = 100.0 * waitTimeDistributionPieMap.get(d.getName()) / total;
-            d.setPieValue(v);
+            Platform.runLater(() -> d.setPieValue(v));
         }
+    }
+
+    public ScheduledFuture<?> getTimeTask() {
+        return timeTask;
     }
 }

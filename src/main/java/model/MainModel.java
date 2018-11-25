@@ -17,15 +17,14 @@ public class MainModel {
     public StatisticsController statisticsController;
 
     private static ScheduledThreadPoolExecutor threadPoolExecutor;
+    private static MainModel model = new MainModel();
+    public List<Checkout> checkouts = new LinkedList<>();
+    public List<Customer> leftCustomers = new LinkedList<>();
 
     static {
         threadPoolExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(100);
         threadPoolExecutor.setRemoveOnCancelPolicy(true);
     }
-
-    public List<Checkout> checkouts = new LinkedList<>();
-    private static MainModel model = new MainModel();
-    public List<Customer> leftCustomers = new LinkedList<>();
 
     public ScheduledThreadPoolExecutor getThreadPoolExecutor() {
         return threadPoolExecutor;

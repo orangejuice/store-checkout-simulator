@@ -101,7 +101,7 @@ public class Counter extends StackPane {
                 Double from = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeFrom.getId()));
                 Double to = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeTo.getId()));
                 double v = ThreadLocalRandom.current().nextDouble(from, to);
-                //TimeUnit.MICROSECONDS.sleep((long) (v * 1000000) / playSpeedDivide);
+
                 initScanService((int) (v * 1000000));
                 nowCustomer.setQuantityWaitForCheckout(--waitFor);
 
@@ -113,7 +113,7 @@ public class Counter extends StackPane {
                     channel.getCounter().updateTotalServed(1);
                     Customer customer = channel.getCustomers().poll();
                     MainModel.getInstance().leftCustomers.add(customer);
-                    //todo MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
+                    MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
                     //todo Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
                     customer.leave();
                 }
@@ -150,8 +150,6 @@ public class Counter extends StackPane {
             timeCountTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> {
                 initTimeCountService();
                 totalServedTime = totalServedTime.plusSeconds(1);
-                double v = 100.0 * totalServedTime.getSecondOfDay() / MainModel.getInstance().simulatorController.getSimulateTime().getSecondOfDay();
-                MainModel.getInstance().statisticsController.updateUtilizationEachCheckoutBar(no, v);
             }, period, period, TimeUnit.MICROSECONDS);
         }
     }
@@ -179,6 +177,10 @@ public class Counter extends StackPane {
 
     public int getType() {
         return type;
+    }
+
+    public boolean isBusying() {
+        return busying;
     }
 
     public Circle getCounterStatusCircle() {

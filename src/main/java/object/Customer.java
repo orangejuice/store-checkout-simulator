@@ -33,7 +33,7 @@ public class Customer extends StackPane {
     private boolean cannotWait;
     private int waitSec;
     private int waitSecActual;
-    private Checkout parent;
+    public Checkout parent;
     private ScheduledFuture<?> tooltipUpdateTask;
     private ScheduledFuture<?> timeCountTask;
 
@@ -97,7 +97,7 @@ public class Customer extends StackPane {
 
                 if (cannotWait && (waitSecActual >= waitSec)) {
                     MainModel.getInstance().leftCustomers.add(this);
-                    //todo MainModel.getInstance().outputController.customerLeaveEvent(this);
+                    MainModel.getInstance().outputController.customerLeaveEvent(this);
                     parent.getCustomers().remove(this);
                     //todo Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
                     this.leave();
@@ -165,9 +165,5 @@ public class Customer extends StackPane {
 
     public void setBeingServed(boolean beingServed) {
         isBeingServed = beingServed;
-    }
-
-    public void setParent(Checkout parent) {
-        this.parent = parent;
     }
 }

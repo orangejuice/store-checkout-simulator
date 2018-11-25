@@ -17,6 +17,7 @@ import util.PropertiesTool;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.ParseException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -46,6 +47,7 @@ public class SimulatorController extends Controller {
     private DateTime simulateTime;
     private ScheduledFuture<?> customerComingTask;
     private ScheduledFuture<?> timeCountTask;
+    private ScheduledFuture<?> finishSimulationTask;
 
     //todo bug of "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 2
     //todo shield element operation in fxml is helpful.
@@ -57,7 +59,6 @@ public class SimulatorController extends Controller {
     public void initSimulator() {
         initBtns();
         initBtnsEvent();
-        model.outputController.storeInitEvent();
 
         businessStatus = false;
         pauseStatus = false;
@@ -65,10 +66,15 @@ public class SimulatorController extends Controller {
         playSpeed.valueProperty().set(0);
         playSpeedDivide = 1;
         simulateTime = new DateTime().secondOfDay().setCopy(0);
+        model.checkouts = new LinkedList<>();
+        model.leftCustomers = new LinkedList<>();
 
         initCheckout();
         initCustomerComingService();
         initTimeCountService();
+        if (finishSimulationTask != null) {
+            finishSimulationTask.cancel(false);
+        }
     }
 
     private void initTimeCountService() {
@@ -117,7 +123,7 @@ public class SimulatorController extends Controller {
             market.getChildren().add(channel);
             model.checkouts.add(channel);
         }
-        model.outputController.checkoutInitEvent();
+        model.outputController.storeInitEvent();
     }
 
     private Checkout getBestCheckout(boolean isExpresswayAccessible) {
@@ -142,6 +148,7 @@ public class SimulatorController extends Controller {
                 shutButton.setDisable(false);
                 resetButton.setDisable(true);
                 model.outputController.addLog("[store] open door", Level.CONFIG);
+                model.statisticsController.initStatisticsTask();
                 return;
             }
             if (pauseStatus) {
@@ -200,8 +207,17 @@ public class SimulatorController extends Controller {
         startButton.setText("Open door");
         shutButton.setDisable(true);
         resetButton.setDisable(false);
-        model.outputController.addLog("[store] close door", Level.CONFIG);
+        model.outputController.addLog("[store] close entry, no new customers from now.", Level.CONFIG);
         model.outputController.addLog("[store] for whole report please wait util all customers have left!", Level.CONFIG);
+        finishSimulationTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
+            if (model.checkouts.stream().noneMatch(checkout -> checkout.getCounter().isBusying())) {
+                finishSimulationTask.cancel(false);
+                model.statisticsController.cancelStatisticsTask();
+                model.outputController.addLog("[store] all customers have gone.", Level.CONFIG);
+                model.outputController.addLog("[store] door closed.", Level.CONFIG);
+                model.outputController.addLog("[store] simulation finish. Thank you.", Level.CONFIG);
+            }
+        }, 0, 1, TimeUnit.SECONDS);
     }
 
     private void initCustomerComingService() {
@@ -259,7 +275,7 @@ public class SimulatorController extends Controller {
         Checkout bestCheckout;
 
         bestCheckout = getBestCheckout(customer.getQuantityOfGoods() <= lessThan);
-        customer.setParent(bestCheckout);
+        customer.parent = bestCheckout;
 
         model.outputController.customerComeEvent(customer);
         bestCheckout.getCustomers().offer(customer);
