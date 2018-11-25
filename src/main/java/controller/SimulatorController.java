@@ -88,6 +88,9 @@ public class SimulatorController extends Controller {
         timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
             if (businessStatus && !pauseStatus) {
                 simulateTime = simulateTime.plusSeconds(1);
+                if (simulateTime.getHourOfDay() >= 1) {
+                    finishSimulation();
+                }
                 model.outputController.processBar.setProgress(simulateTime.getSecondOfDay() / 3600.0);
             }
         }, period, period, TimeUnit.MICROSECONDS);
@@ -114,18 +117,20 @@ public class SimulatorController extends Controller {
         int no = 0;
         for (int i = 0; i < quantityOfCheckout; no++, i++) {
             Checkout channel = new Checkout(no + 1, Checkout.CheckoutChannelType.NORMAL);
-            addCheckout(channel);
+            market.getChildren().add(channel);
+            checkouts.add(channel);
         }
         Integer quantityOfExpresswayCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfExpresswayCheckouts.getId()));
         for (int i = 0; i < quantityOfExpresswayCheckout; no++, i++) {
             Checkout channel = new Checkout(no + 1, Checkout.CheckoutChannelType.EXPRESSWAY);
-            addCheckout(channel);
+            market.getChildren().add(channel);
+            checkouts.add(channel);
         }
 
-        log("[store] ready", Level.CONFIG);
-        log("[store] equipped with " + quantityOfCheckout + " checkout", Level.CONFIG);
+        model.outputController.addLog("[store] ready", Level.CONFIG);
+        model.outputController.addLog("[store] equipped with " + quantityOfCheckout + " checkout", Level.CONFIG);
         if (quantityOfExpresswayCheckout > 0) {
-            log("[store] equipped with " + quantityOfExpresswayCheckout + " expressway checkout", Level.CONFIG);
+            model.outputController.addLog("[store] equipped with " + quantityOfExpresswayCheckout + " expressway checkout", Level.CONFIG);
         }
     }
 
@@ -151,30 +156,25 @@ public class SimulatorController extends Controller {
                 resetButton.setDisable(true);
                 shutButton.setDisable(false);
                 resetButton.setDisable(true);
-                log("[store] open door", Level.CONFIG);
+                model.outputController.addLog("[store] open door", Level.CONFIG);
                 return;
             }
             if (pauseStatus) {
                 // to continue
                 startButton.setGraphic(new FontIcon("fas-pause"));
                 startButton.setText("pause");
-                log("[store] continue", Level.CONFIG);
+                model.outputController.addLog("[store] continue", Level.CONFIG);
             } else {
                 startButton.setGraphic(new FontIcon("fas-play"));
                 startButton.setText("continue");
-                log("[store] pause", Level.CONFIG);
+                model.outputController.addLog("[store] pause", Level.CONFIG);
             }
             pauseStatus = !pauseStatus;
         });
 
         shutButton.setOnAction(actionEvent -> {
             if (businessStatus) {
-                startButton.setDisable(true);
-                startButton.setGraphic(new FontIcon("fas-play"));
-                startButton.setText("Open door");
-                shutButton.setDisable(true);
-                resetButton.setDisable(false);
-                log("[store] close door", Level.CONFIG);
+                finishSimulation();
             }
             businessStatus = !businessStatus;
         });
@@ -207,6 +207,16 @@ public class SimulatorController extends Controller {
             initTimeCountService();
             checkouts.forEach(checkout -> checkout.getCounter().initTimeCountService(playSpeedDivide));
         });
+    }
+
+    private void finishSimulation() {
+        startButton.setDisable(true);
+        startButton.setGraphic(new FontIcon("fas-play"));
+        startButton.setText("Open door");
+        shutButton.setDisable(true);
+        resetButton.setDisable(false);
+        model.outputController.addLog("[store] close door", Level.CONFIG);
+        model.outputController.addLog("[store] the simulation was finished successfully!", Level.CONFIG);
     }
 
     private void initCustomerComingService() {
@@ -270,58 +280,10 @@ public class SimulatorController extends Controller {
 
         bestChannel = getBestChannel(customer.getQuantityOfGoods() <= lessThan);
 
-        Platform.runLater(() -> {
-            log("[customer] [new] customer" + customerNo + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
-                    (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
-            bestChannel.getChildren().add(customer);
-            bestChannel.getCustomers().offer(customer);
-        });
-    }
-
-    private void addCheckout(Checkout channel) {
-        market.getChildren().add(channel);
-        checkouts.add(channel);
-
-        new Thread(() -> {
-            while (true) {
-                try {
-                    if (channel.getCustomers().size() > 0) {
-                        channel.getCounter().setBusying(true, playSpeedDivide);
-                        // offer poll/peek for queue
-                        Customer nowCustomer = channel.getCustomers().peek();
-                        nowCustomer.setBeingServed(true);
-
-                        int total = nowCustomer.getQuantityOfGoods();
-                        int waitFor = nowCustomer.getQuantityWaitForCheckout();
-
-                        // scan goods
-                        Double from = Double.valueOf(props.getProperty(model.preferenceController.prefRangeOfEachProductScanTimeFrom.getId()));
-                        Double to = Double.valueOf(props.getProperty(model.preferenceController.prefRangeOfEachProductScanTimeTo.getId()));
-                        double v = ThreadLocalRandom.current().nextDouble(from, to);
-                        TimeUnit.MICROSECONDS.sleep((long) (v * 1000000) / playSpeedDivide);
-                        nowCustomer.setQuantityWaitForCheckout(--waitFor);
-
-                        // change the arc
-                        nowCustomer.getArc().setLength(360.0 * waitFor / total);
-
-                        // if 0, delete
-                        if (waitFor == 0) {
-                            channel.getCounter().updateTotalServed(1);
-                            Platform.runLater(() -> {
-                                channel.getChildren().remove(nowCustomer);
-                                channel.getCustomers().poll();
-                                log("[checkout] " + channel.getCounter().getNo() + " served a customer", Level.INFO);
-                            });
-                        }
-                    } else {
-                        channel.getCounter().setBusying(false, 0);
-                        TimeUnit.MICROSECONDS.sleep(1000000 / playSpeedDivide);
-                    }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
+        model.outputController.addLog("[customer] [new] customer" + customerNo + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
+                (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
+        bestChannel.getCustomers().offer(customer);
+        Platform.runLater(() -> bestChannel.getChildren().add(customer));
     }
 
     private void setMarketBackgroundAutoFit() {
@@ -330,10 +292,6 @@ public class SimulatorController extends Controller {
             entry.setFitWidth(newValue.getWidth() * 181.0 / 381);
             shelf2.setFitWidth(newValue.getWidth() * 100.0 / 381);
         });
-    }
-
-    private void log(String text, Level level) {
-        model.outputController.addLog(text, level);
     }
 
     public int getPlaySpeedDivide() {

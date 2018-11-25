@@ -11,12 +11,12 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.util.Duration;
+import model.MainModel;
 import org.joda.time.DateTime;
+import util.PropertiesTool;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
+import java.util.logging.Level;
 
 public class Counter extends StackPane {
     private Circle counterStatusCircle;
@@ -32,16 +32,21 @@ public class Counter extends StackPane {
     private ScheduledFuture<?> tooltipUpdateTask;
     private ScheduledExecutorService timeCountService;
     private ScheduledFuture<?> timeCountTask;
+    private ScheduledExecutorService scanService;
+    private ScheduledFuture<?> scanTask;
 
     public Counter(int no, int type, boolean status) {
         this.no = no;
         this.status = status;
         this.type = type;
         totalServed = 0;
+
         totalServedTime = new DateTime().secondOfDay().setCopy(0);
         tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
         timeCountService = Executors.newSingleThreadScheduledExecutor();
+        scanService = Executors.newSingleThreadScheduledExecutor();
         initTooltipService(500);
+        initScanService(1000000);
 
         ImageView counterImageView = new ImageView();
         counterImageView.setFitHeight(150);
@@ -77,6 +82,51 @@ public class Counter extends StackPane {
             label.setText(String.valueOf(no));
         }
         getChildren().addAll(counterImageView, counterStatusCircle, label);
+    }
+
+    private void initScanService(int scanItemInterval) {
+        if (scanTask != null) {
+            scanTask.cancel(false);
+        }
+
+        int playSpeedDivide = MainModel.getInstance().simulatorController.getPlaySpeedDivide();
+        int period = scanItemInterval / playSpeedDivide;
+        scanTask = scanService.scheduleAtFixedRate(() -> {
+            Checkout channel = ((Checkout) getParent());
+            if (channel.getCustomers().size() > 0) {
+                channel.getCounter().setBusying(true, playSpeedDivide);
+                // offer poll/peek for queue
+                Customer nowCustomer = channel.getCustomers().peek();
+                nowCustomer.setBeingServed(true);
+
+                int total = nowCustomer.getQuantityOfGoods();
+                int waitFor = nowCustomer.getQuantityWaitForCheckout();
+
+                // scan goods
+                Double from = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeFrom.getId()));
+                Double to = Double.valueOf(PropertiesTool.getProps().getProperty(MainModel.getInstance().preferenceController.prefRangeOfEachProductScanTimeTo.getId()));
+                double v = ThreadLocalRandom.current().nextDouble(from, to);
+                //TimeUnit.MICROSECONDS.sleep((long) (v * 1000000) / playSpeedDivide);
+                initScanService((int) (v * 1000000));
+                nowCustomer.setQuantityWaitForCheckout(--waitFor);
+
+                // change the arc
+                nowCustomer.getArc().setLength(360.0 * waitFor / total);
+
+                // if 0, delete
+                if (waitFor == 0) {
+                    channel.getCounter().updateTotalServed(1);
+                    channel.getCustomers().poll();
+                    MainModel.getInstance().outputController.addLog("[checkout] " + channel.getCounter().getNo() + " served a customer", Level.INFO);
+                    Platform.runLater(() -> {
+                        channel.getChildren().remove(nowCustomer);
+                    });
+                }
+            } else {
+                setBusying(false, 0);
+                initScanService(1000000);
+            }
+        }, period, period, TimeUnit.MICROSECONDS);
     }
 
     public void setBusying(boolean busyingStatus, int playSpeedDivide) {

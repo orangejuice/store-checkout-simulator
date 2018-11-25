@@ -95,12 +95,10 @@ public class Customer extends StackPane {
                 initTimeCountService();
                 waitSecActual += 1;
                 if (isCannotWait() && waitSecActual >= getWaitSec()) {
-                    Platform.runLater(() -> {
-                        ((Checkout) getParent()).getCustomers().remove(this);
-                        ((Checkout) getParent()).getChildren().remove(this);
-                        MainModel.getInstance().outputController.addLog("[customer] [leave] customer" + no
-                                + " leaved after waiting for " + getWaitSec() + "s", Level.WARNING);
-                    });
+                    ((Checkout) getParent()).getCustomers().remove(this);
+                    MainModel.getInstance().outputController.addLog("[customer] [leave] customer" + no
+                            + " leaved after waiting for " + getWaitSec() + "s", Level.WARNING);
+                    Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
                 }
             }, period, period, TimeUnit.MICROSECONDS);
         }

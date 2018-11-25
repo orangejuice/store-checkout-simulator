@@ -1,5 +1,6 @@
 package controller;
 
+import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
@@ -40,7 +41,7 @@ public class OutputController extends Controller {
         }
         Label label = new Label("[" + DateTimeFormat.forPattern("HH:mm:ss")
                 .print(model.simulatorController.getSimulateTime()) + "] " + text, fontIcon);
-        logListView.getItems().add(label);
+        Platform.runLater(() -> logListView.getItems().add(label));
         //todo follow when scrollbar show up
     }
 }
