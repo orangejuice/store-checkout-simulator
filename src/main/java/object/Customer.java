@@ -1,5 +1,6 @@
 package object;
 
+import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -21,7 +22,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
 
 public class Customer extends StackPane {
     private Tooltip tooltip;
@@ -79,6 +79,11 @@ public class Customer extends StackPane {
         StackPane.setAlignment(group, Pos.CENTER);
 
         getChildren().addAll(customerImageView, group);
+
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), this);
+        fadeIn.setFromValue(0);
+        fadeIn.setToValue(1);
+        fadeIn.play();
     }
 
     public void initTimeCountService() {
@@ -96,8 +101,7 @@ public class Customer extends StackPane {
                 waitSecActual += 1;
                 if (isCannotWait() && waitSecActual >= getWaitSec()) {
                     ((Checkout) getParent()).getCustomers().remove(this);
-                    MainModel.getInstance().outputController.addLog("[customer] [leave] customer" + no
-                            + " leaved after waiting for " + getWaitSec() + "s", Level.WARNING);
+                    MainModel.getInstance().outputController.customerLeaveEvent(this);
                     Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
                 }
             }, period, period, TimeUnit.MICROSECONDS);

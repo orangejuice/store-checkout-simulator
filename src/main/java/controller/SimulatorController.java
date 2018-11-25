@@ -1,7 +1,5 @@
 package controller;
 
-import javafx.animation.FadeTransition;
-import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -9,7 +7,6 @@ import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.util.Duration;
 import object.Checkout;
 import object.Customer;
 import org.joda.time.DateTime;
@@ -64,8 +61,7 @@ public class SimulatorController extends Controller {
     public void initSimulator() {
         initBtns();
         initBtnsEvent();
-        model.outputController.clearLogList();
-        model.outputController.processBar.setProgress(0);
+        model.outputController.storeInitEvent();
 
         businessStatus = false;
         pauseStatus = false;
@@ -126,12 +122,7 @@ public class SimulatorController extends Controller {
             market.getChildren().add(channel);
             checkouts.add(channel);
         }
-
-        model.outputController.addLog("[store] ready", Level.CONFIG);
-        model.outputController.addLog("[store] equipped with " + quantityOfCheckout + " checkout", Level.CONFIG);
-        if (quantityOfExpresswayCheckout > 0) {
-            model.outputController.addLog("[store] equipped with " + quantityOfExpresswayCheckout + " expressway checkout", Level.CONFIG);
-        }
+        model.outputController.checkoutInitEvent(checkouts);
     }
 
     private Checkout getBestChannel(boolean isExpresswayAccessible) {
@@ -216,7 +207,7 @@ public class SimulatorController extends Controller {
         shutButton.setDisable(true);
         resetButton.setDisable(false);
         model.outputController.addLog("[store] close door", Level.CONFIG);
-        model.outputController.addLog("[store] the simulation was finished successfully!", Level.CONFIG);
+        model.outputController.addLog("[store] for whole report please wait util all customers have left!", Level.CONFIG);
     }
 
     private void initCustomerComingService() {
@@ -269,21 +260,15 @@ public class SimulatorController extends Controller {
     }
 
     private void addCustomer(Customer customer) {
-        FadeTransition fadeIn = new FadeTransition(Duration.millis(200), customer);
-        fadeIn.setFromValue(0);
-        fadeIn.setToValue(1);
-        fadeIn.play();
-
         //choose the best checkout
         Integer lessThan = Integer.valueOf(props.getProperty(model.preferenceController.prefExpresswayCheckoutsForProductsLessThan.getId()));
         Checkout bestChannel;
 
         bestChannel = getBestChannel(customer.getQuantityOfGoods() <= lessThan);
 
-        model.outputController.addLog("[customer] [new] customer" + customerNo + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
-                (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
+        model.outputController.customerComeEvent(customer);
         bestChannel.getCustomers().offer(customer);
-        Platform.runLater(() -> bestChannel.getChildren().add(customer));
+        //todo Platform.runLater(() -> bestChannel.getChildren().add(customer));
     }
 
     private void setMarketBackgroundAutoFit() {

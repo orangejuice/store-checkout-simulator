@@ -5,10 +5,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.paint.Paint;
+import object.Checkout;
+import object.Customer;
 import org.joda.time.format.DateTimeFormat;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.net.URL;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 
@@ -20,12 +23,42 @@ public class OutputController extends Controller {
 
     }
 
-    public void clearLogList() {
+    public void storeInitEvent() {
         logListView.getItems().clear();
+        processBar.setProgress(0);
+        //todo init all charts
+    }
+
+    public void checkoutInitEvent(List<Checkout> checkouts) {
+        long normal = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutChannelType.NORMAL).count();
+        long expressway = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutChannelType.EXPRESSWAY).count();
+
+        model.outputController.addLog("[store] ready", Level.CONFIG);
+        model.outputController.addLog("[store] equipped with " + normal + " checkout", Level.CONFIG);
+        if (expressway > 0) {
+            model.outputController.addLog("[store] equipped with " + expressway + " expressway checkout", Level.CONFIG);
+        }
+    }
+
+    public void customerCheckoutEvent(Checkout checkout) {
+        addLog("[checkout" + checkout.getCounter().getNo() + "] served a customer", Level.INFO);
+    }
+
+    public void customerComeEvent(Customer customer) {
+        addLog("[customer] [new] customer" + customer.getNo() + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
+                (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
+    }
+
+    public void customerLeaveEvent(Customer customer) {
+        addLog("[customer] [leave] customer" + customer.getNo()
+                + " leaved after waiting for " + customer.getWaitSec() + "s", Level.WARNING);
     }
 
     public void addLog(String text, Level level) {
         FontIcon fontIcon = new FontIcon();
+        fontIcon.setIconLiteral("fas-plus-circle");
+        fontIcon.setIconColor(Paint.valueOf("#00ad57"));
+
         if (level == Level.WARNING) {
             fontIcon.setIconLiteral("fas-exclamation-circle");
             fontIcon.setIconColor(Paint.valueOf("#e00000"));

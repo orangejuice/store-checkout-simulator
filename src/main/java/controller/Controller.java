@@ -43,6 +43,8 @@ public abstract class Controller implements Initializable {
                 model.preferenceController = (PreferenceController) controller;
             } else if (controller.getClass() == SimulatorController.class) {
                 model.simulatorController = (SimulatorController) controller;
+            } else if (controller.getClass() == StatisticsController.class) {
+                model.statisticsController = (StatisticsController) controller;
             }
             controller.setModel(model);
         }

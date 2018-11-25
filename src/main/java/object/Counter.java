@@ -16,7 +16,6 @@ import org.joda.time.DateTime;
 import util.PropertiesTool;
 
 import java.util.concurrent.*;
-import java.util.logging.Level;
 
 public class Counter extends StackPane {
     private Circle counterStatusCircle;
@@ -117,10 +116,8 @@ public class Counter extends StackPane {
                 if (waitFor == 0) {
                     channel.getCounter().updateTotalServed(1);
                     channel.getCustomers().poll();
-                    MainModel.getInstance().outputController.addLog("[checkout] " + channel.getCounter().getNo() + " served a customer", Level.INFO);
-                    Platform.runLater(() -> {
-                        channel.getChildren().remove(nowCustomer);
-                    });
+                    MainModel.getInstance().outputController.customerCheckoutEvent(channel);
+                    //todo Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
                 }
             } else {
                 setBusying(false, 0);

@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.chart.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 <AnchorPane xmlns:fx="http://javafx.com/fxml/1" prefHeight="1500.0" prefWidth="800.0"
-            xmlns="http://javafx.com/javafx/10.0.1" fx:controller="controller.StatisticsController">
+            xmlns="http://javafx.com/javafx/10.0.1" fx:controller="controller.StatisticsController"
+            AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
+            AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
     <ScrollPane fitToWidth="true" prefHeight="200.0" prefWidth="200.0" style="-fx-padding: 20;"
                 stylesheets="@../style/copyable-text.css" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
                 AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -13,7 +16,24 @@
             <Separator prefWidth="200.0"/>
             <TextField layoutX="10.0" layoutY="374.0" style="-fx-font-weight: bold" styleClass="copyable-label"
                        text="statistics"/>
-            <FlowPane>
+            <FlowPane alignment="CENTER">
+                <PieChart fx:id="waitTimeDistributionPie"/>
+                <ScatterChart fx:id="waitTimeEachCustomerScatter">
+                    <xAxis>
+                        <NumberAxis side="BOTTOM"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis side="LEFT"/>
+                    </yAxis>
+                </ScatterChart>
+                <BarChart fx:id="utilizationEachCheckoutBar">
+                    <xAxis>
+                        <CategoryAxis side="BOTTOM"/>
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis side="LEFT"/>
+                    </yAxis>
+                </BarChart>
 
             </FlowPane>
             <TextField layoutX="10.0" layoutY="97.0" style="-fx-font-weight: bold" styleClass="copyable-label"
