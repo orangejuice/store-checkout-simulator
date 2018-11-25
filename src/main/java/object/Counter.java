@@ -15,7 +15,9 @@ import model.MainModel;
 import org.joda.time.DateTime;
 import util.PropertiesTool;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 
 public class Counter extends StackPane {
     private Circle counterStatusCircle;
@@ -27,11 +29,8 @@ public class Counter extends StackPane {
     private int type;
     private int totalServed;
     private DateTime totalServedTime;
-    private ScheduledExecutorService tooltipUpdateExecutorService;
     private ScheduledFuture<?> tooltipUpdateTask;
-    private ScheduledExecutorService timeCountService;
     private ScheduledFuture<?> timeCountTask;
-    private ScheduledExecutorService scanService;
     private ScheduledFuture<?> scanTask;
 
     public Counter(int no, int type, boolean status) {
@@ -41,9 +40,6 @@ public class Counter extends StackPane {
         totalServed = 0;
 
         totalServedTime = new DateTime().secondOfDay().setCopy(0);
-        tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
-        timeCountService = Executors.newSingleThreadScheduledExecutor();
-        scanService = Executors.newSingleThreadScheduledExecutor();
         initTooltipService(500);
         initScanService(1000000);
 
@@ -90,7 +86,7 @@ public class Counter extends StackPane {
 
         int playSpeedDivide = MainModel.getInstance().simulatorController.getPlaySpeedDivide();
         int period = scanItemInterval / playSpeedDivide;
-        scanTask = scanService.scheduleAtFixedRate(() -> {
+        scanTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> {
             Checkout channel = ((Checkout) getParent());
             if (channel.getCustomers().size() > 0) {
                 channel.getCounter().setBusying(true, playSpeedDivide);
@@ -116,8 +112,10 @@ public class Counter extends StackPane {
                 if (waitFor == 0) {
                     channel.getCounter().updateTotalServed(1);
                     Customer customer = channel.getCustomers().poll();
-                    MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
+                    MainModel.getInstance().leftCustomers.add(customer);
+                    //todo MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
                     //todo Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
+                    customer.leave();
                 }
             } else {
                 setBusying(false, 0);
@@ -133,21 +131,27 @@ public class Counter extends StackPane {
         busying = busyingStatus;
         if (busyingStatus) {
             counterStatusCircle.setStroke(Paint.valueOf("#eae600"));
-            initTimeCountService(playSpeedDivide);
+            initTimeCountService();
         } else {
             counterStatusCircle.setStroke(Paint.valueOf("limegreen"));
-            initTimeCountService(0);
         }
     }
 
-    public void initTimeCountService(int playSpeedDivide) {
+    public void initTimeCountService() {
         if (timeCountTask != null) {
             timeCountTask.cancel(false);
         }
+        if (!busying) {
+            return;
+        }
+        int playSpeedDivide = MainModel.getInstance().simulatorController.getPlaySpeedDivide();
         if (playSpeedDivide != 0) {
             int period = 1000000 / playSpeedDivide;
-            timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
+            timeCountTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> {
+                initTimeCountService();
                 totalServedTime = totalServedTime.plusSeconds(1);
+                double v = 100.0 * totalServedTime.getSecondOfDay() / MainModel.getInstance().simulatorController.getSimulateTime().getSecondOfDay();
+                MainModel.getInstance().statisticsController.updateUtilizationEachCheckoutBar(no, v);
             }, period, period, TimeUnit.MICROSECONDS);
         }
     }
@@ -156,7 +160,7 @@ public class Counter extends StackPane {
         if (tooltipUpdateTask != null) {
             tooltipUpdateTask.cancel(false);
         }
-        tooltipUpdateTask = tooltipUpdateExecutorService.scheduleAtFixedRate(() -> Platform.runLater(() -> {
+        tooltipUpdateTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> Platform.runLater(() -> {
             tooltip.setText("Checkout " + no + "\n\n" +
                     "status: " + (status ? "busying" : "idle") + "\n" +
                     "served customers: " + totalServed + "\n" +
@@ -181,8 +185,12 @@ public class Counter extends StackPane {
         return counterStatusCircle;
     }
 
-    public int updateTotalServed(int plus) {
-        return totalServed += plus;
+    public DateTime getTotalServedTime() {
+        return totalServedTime;
+    }
+
+    public void updateTotalServed(int plus) {
+        totalServed += plus;
     }
 
 }

@@ -84,6 +84,7 @@ public class ShellController extends Controller {
                 statisticsTab.setDisable(false);
                 preferencesTab.setDisable(true);
                 model.simulatorController.initSimulator();
+                model.statisticsController.initStatistics();
                 break;
         }
     }

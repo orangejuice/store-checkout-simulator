@@ -1,6 +1,13 @@
 package model;
 
 import controller.*;
+import object.Checkout;
+import object.Customer;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 public class MainModel {
     public OutputController outputController;
@@ -9,7 +16,20 @@ public class MainModel {
     public SimulatorController simulatorController;
     public StatisticsController statisticsController;
 
+    private static ScheduledThreadPoolExecutor threadPoolExecutor;
+
+    static {
+        threadPoolExecutor = (ScheduledThreadPoolExecutor) Executors.newScheduledThreadPool(100);
+        threadPoolExecutor.setRemoveOnCancelPolicy(true);
+    }
+
+    public List<Checkout> checkouts = new LinkedList<>();
     private static MainModel model = new MainModel();
+    public List<Customer> leftCustomers = new LinkedList<>();
+
+    public ScheduledThreadPoolExecutor getThreadPoolExecutor() {
+        return threadPoolExecutor;
+    }
 
     public static MainModel getInstance() {
         return model;

@@ -17,11 +17,12 @@ import util.PropertiesTool;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.ParseException;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.concurrent.*;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -37,15 +38,12 @@ public class SimulatorController extends Controller {
     public Slider playSpeed;
     public Label playSpeedDesc;
 
-    private List<Checkout> checkouts;
     private int playSpeedDivide;
     private boolean businessStatus;
     private boolean pauseStatus;
     private Properties props;
     private int customerNo;
     private DateTime simulateTime;
-    private ScheduledExecutorService customerComingExecutorService;
-    private ScheduledExecutorService timeCountService;
     private ScheduledFuture<?> customerComingTask;
     private ScheduledFuture<?> timeCountTask;
 
@@ -54,9 +52,6 @@ public class SimulatorController extends Controller {
     public void initialize(URL location, ResourceBundle resources) {
         setMarketBackgroundAutoFit();
         props = PropertiesTool.getProps();
-
-        customerComingExecutorService = Executors.newSingleThreadScheduledExecutor();
-        timeCountService = Executors.newSingleThreadScheduledExecutor();
     }
 
     public void initSimulator() {
@@ -82,7 +77,7 @@ public class SimulatorController extends Controller {
         if (timeCountTask != null) {
             timeCountTask.cancel(false);
         }
-        timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
+        timeCountTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
             if (businessStatus && !pauseStatus) {
                 simulateTime = simulateTime.plusSeconds(1);
                 if (simulateTime.getHourOfDay() >= 1) {
@@ -108,29 +103,28 @@ public class SimulatorController extends Controller {
 
     private void initCheckout() {
         market.getChildren().removeIf(node -> node.getClass() != HBox.class);
-        checkouts = new LinkedList<>();
 
         Integer quantityOfCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfCheckouts.getId()));
         int no = 0;
         for (int i = 0; i < quantityOfCheckout; no++, i++) {
             Checkout channel = new Checkout(no + 1, Checkout.CheckoutType.NORMAL);
             market.getChildren().add(channel);
-            checkouts.add(channel);
+            model.checkouts.add(channel);
         }
         Integer quantityOfExpresswayCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfExpresswayCheckouts.getId()));
         for (int i = 0; i < quantityOfExpresswayCheckout; no++, i++) {
             Checkout channel = new Checkout(no + 1, Checkout.CheckoutType.EXPRESSWAY);
             market.getChildren().add(channel);
-            checkouts.add(channel);
+            model.checkouts.add(channel);
         }
-        model.outputController.checkoutInitEvent(checkouts);
+        model.outputController.checkoutInitEvent();
     }
 
     private Checkout getBestCheckout(boolean isExpresswayAccessible) {
-        Integer min = checkouts.stream()
+        Integer min = model.checkouts.stream()
                 .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
                 .mapToInt(v -> v.getCustomers().size()).min().getAsInt();
-        List<Checkout> chooseFromList = checkouts.stream()
+        List<Checkout> chooseFromList = model.checkouts.stream()
                 .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
                 .filter(c -> c.getCustomers().size() == min)
                 .collect(Collectors.toList());
@@ -197,7 +191,6 @@ public class SimulatorController extends Controller {
             }
             initCustomerComingService();
             initTimeCountService();
-            checkouts.forEach(checkout -> checkout.getCounter().initTimeCountService(playSpeedDivide));
         });
     }
 
@@ -230,7 +223,7 @@ public class SimulatorController extends Controller {
         if (customerComingTask != null) {
             customerComingTask.cancel(false);
         }
-        customerComingTask = customerComingExecutorService.scheduleAtFixedRate(() -> {
+        customerComingTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
             try {
                 if (businessStatus && !pauseStatus) {
                     //quantity of goods

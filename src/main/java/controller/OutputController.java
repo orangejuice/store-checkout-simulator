@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 public class OutputController extends Controller {
     public ListView<Label> logListView;
@@ -29,15 +30,19 @@ public class OutputController extends Controller {
         //todo init all charts
     }
 
-    public void checkoutInitEvent(List<Checkout> checkouts) {
-        long normal = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutType.NORMAL).count();
-        long expressway = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutType.EXPRESSWAY).count();
+    public void checkoutInitEvent() {
+        int normal = (int) model.checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutType.NORMAL).count();
+        int expressway = (int) model.checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutType.EXPRESSWAY).count();
 
         model.outputController.addLog("[store] ready", Level.CONFIG);
         model.outputController.addLog("[store] equipped with " + normal + " checkout", Level.CONFIG);
         if (expressway > 0) {
             model.outputController.addLog("[store] equipped with " + expressway + " expressway checkout", Level.CONFIG);
         }
+
+        List<String> names = model.checkouts.stream().map(checkout -> "checkout" + checkout.getCounter().getNo()).collect(Collectors.toList());
+        model.statisticsController.initWaitTimeEachCustomerScatter(names);
+        model.statisticsController.initUtilizationEachCheckoutBar(names);
     }
 
     public void customerComeEvent(Customer customer) {
@@ -61,6 +66,7 @@ public class OutputController extends Controller {
             waitSecPeriod = ">20min";
         }
         model.statisticsController.updateWaitTimeDistributionPieAddNewData(waitSecPeriod);
+        model.statisticsController.updateWaitTimeEachCustomerScatter(checkout.getCounter().getNo(), customer.getNo(), customer.getWaitSecActual());
         addLog("[checkout" + checkout.getCounter().getNo() + "] served a customer", Level.INFO);
     }
 

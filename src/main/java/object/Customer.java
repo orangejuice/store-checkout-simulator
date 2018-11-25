@@ -18,8 +18,6 @@ import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 import model.MainModel;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -36,9 +34,7 @@ public class Customer extends StackPane {
     private int waitSec;
     private int waitSecActual;
     private Checkout parent;
-    private ScheduledExecutorService tooltipUpdateExecutorService;
     private ScheduledFuture<?> tooltipUpdateTask;
-    private ScheduledExecutorService timeCountService;
     private ScheduledFuture<?> timeCountTask;
 
     public Customer(int no, int quantityOfGoods, boolean cannotWait, int waitSec) {
@@ -49,7 +45,6 @@ public class Customer extends StackPane {
         this.waitSecActual = 0;
         this.waitSec = waitSec;
         this.isBeingServed = false;
-        timeCountService = Executors.newSingleThreadScheduledExecutor();
 
         ImageView customerImageView = new ImageView();
         customerImageView.setFitHeight(150);
@@ -67,7 +62,6 @@ public class Customer extends StackPane {
         setOnMouseMoved(mouseEvent -> tooltip.show((Node) mouseEvent.getSource(),
                 mouseEvent.getScreenX() + 5, mouseEvent.getScreenY() + 15));
         setOnMouseExited(mouseEvent -> tooltip.hide());
-        tooltipUpdateExecutorService = Executors.newSingleThreadScheduledExecutor();
         initTooltipService(500);
 
         arc = new Arc(30, 30, 25, 25, 90, 0);
@@ -98,13 +92,15 @@ public class Customer extends StackPane {
         int playSpeedDivide = MainModel.getInstance().simulatorController.getPlaySpeedDivide();
         if (playSpeedDivide != 0) {
             int period = 1000000 / playSpeedDivide;
-            timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
+            timeCountTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> {
                 waitSecActual += 1;
 
                 if (cannotWait && (waitSecActual >= waitSec)) {
-                    MainModel.getInstance().outputController.customerLeaveEvent(this);
+                    MainModel.getInstance().leftCustomers.add(this);
+                    //todo MainModel.getInstance().outputController.customerLeaveEvent(this);
                     parent.getCustomers().remove(this);
                     //todo Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
+                    this.leave();
                 } else {
                     initTimeCountService();
                 }
@@ -112,11 +108,16 @@ public class Customer extends StackPane {
         }
     }
 
+    public void leave() {
+        tooltipUpdateTask.cancel(false);
+        timeCountTask.cancel(false);
+    }
+
     public void initTooltipService(long period) {
         if (tooltipUpdateTask != null) {
             tooltipUpdateTask.cancel(false);
         }
-        tooltipUpdateTask = tooltipUpdateExecutorService.scheduleAtFixedRate(() -> Platform.runLater(() -> {
+        tooltipUpdateTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> Platform.runLater(() -> {
             tooltip.setText("Customer " + no + "\n\n" +
                     "quantity of goods: " + quantityOfGoods + "\n" +
                     "waiting for served: " + quantityWaitForCheckout + "\n" +
