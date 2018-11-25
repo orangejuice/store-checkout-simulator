@@ -115,8 +115,8 @@ public class Counter extends StackPane {
                 // if 0, delete
                 if (waitFor == 0) {
                     channel.getCounter().updateTotalServed(1);
-                    channel.getCustomers().poll();
-                    MainModel.getInstance().outputController.customerCheckoutEvent(channel);
+                    Customer customer = channel.getCustomers().poll();
+                    MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
                     //todo Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
                 }
             } else {

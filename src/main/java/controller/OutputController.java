@@ -40,16 +40,32 @@ public class OutputController extends Controller {
         }
     }
 
-    public void customerCheckoutEvent(Checkout checkout) {
-        addLog("[checkout" + checkout.getCounter().getNo() + "] served a customer", Level.INFO);
-    }
-
     public void customerComeEvent(Customer customer) {
         addLog("[customer] [new] customer" + customer.getNo() + " Goods:" + customer.getQuantityOfGoods() + ",temper:" +
                 (customer.isCannotWait() ? "Bad, leave after " + customer.getWaitSec() + "s" : "Good"), Level.FINE);
     }
 
+    public void customerCheckoutEvent(Checkout checkout, Customer customer) {
+        String waitSecPeriod;
+        if (customer.getWaitSecActual() <= 60) {
+            waitSecPeriod = "<1min";
+        } else if (customer.getWaitSecActual() <= 300) {
+            waitSecPeriod = "1-5min";
+        } else if (customer.getWaitSecActual() <= 600) {
+            waitSecPeriod = "5-10min";
+        } else if (customer.getWaitSecActual() <= 900) {
+            waitSecPeriod = "10-15min";
+        } else if (customer.getWaitSecActual() <= 1200) {
+            waitSecPeriod = "15-20min";
+        } else {
+            waitSecPeriod = ">20min";
+        }
+        model.statisticsController.updateWaitTimeDistributionPieAddNewData(waitSecPeriod);
+        addLog("[checkout" + checkout.getCounter().getNo() + "] served a customer", Level.INFO);
+    }
+
     public void customerLeaveEvent(Customer customer) {
+        model.statisticsController.updateWaitTimeDistributionPieAddNewData("leave");
         addLog("[customer] [leave] customer" + customer.getNo()
                 + " leaved after waiting for " + customer.getWaitSec() + "s", Level.WARNING);
     }

@@ -16,7 +16,7 @@
             <Separator prefWidth="200.0"/>
             <TextField layoutX="10.0" layoutY="374.0" style="-fx-font-weight: bold" styleClass="copyable-label"
                        text="statistics"/>
-            <FlowPane alignment="CENTER">
+            <FlowPane>
                 <PieChart fx:id="waitTimeDistributionPie"/>
                 <ScatterChart fx:id="waitTimeEachCustomerScatter">
                     <xAxis>
@@ -34,7 +34,6 @@
                         <NumberAxis side="LEFT"/>
                     </yAxis>
                 </BarChart>
-
             </FlowPane>
             <TextField layoutX="10.0" layoutY="97.0" style="-fx-font-weight: bold" styleClass="copyable-label"
                        text="result"/>

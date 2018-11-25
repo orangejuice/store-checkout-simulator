@@ -84,6 +84,7 @@ public class Customer extends StackPane {
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
         fadeIn.play();
+        initTimeCountService();
     }
 
     public void initTimeCountService() {
@@ -152,6 +153,10 @@ public class Customer extends StackPane {
 
     public boolean isBeingServed() {
         return isBeingServed;
+    }
+
+    public int getWaitSecActual() {
+        return waitSecActual;
     }
 
     public void setBeingServed(boolean beingServed) {

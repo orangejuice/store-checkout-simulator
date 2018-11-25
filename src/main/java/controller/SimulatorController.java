@@ -1,5 +1,6 @@
 package controller;
 
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
@@ -165,7 +166,7 @@ public class SimulatorController extends Controller {
 
         shutButton.setOnAction(actionEvent -> {
             if (businessStatus) {
-                finishSimulation();
+                Platform.runLater(this::finishSimulation);
             }
             businessStatus = !businessStatus;
         });
