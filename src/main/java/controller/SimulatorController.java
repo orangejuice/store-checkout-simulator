@@ -96,7 +96,7 @@ public class SimulatorController extends Controller {
     private void initBtns() {
         startButton.setDisable(false);
         shutButton.setDisable(true);
-        resetButton.setDisable(true);
+        resetButton.setDisable(false);
 
         startButton.setGraphic(new FontIcon("fas-play"));
         startButton.setText("open door");
@@ -113,25 +113,25 @@ public class SimulatorController extends Controller {
         Integer quantityOfCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfCheckouts.getId()));
         int no = 0;
         for (int i = 0; i < quantityOfCheckout; no++, i++) {
-            Checkout channel = new Checkout(no + 1, Checkout.CheckoutChannelType.NORMAL);
+            Checkout channel = new Checkout(no + 1, Checkout.CheckoutType.NORMAL);
             market.getChildren().add(channel);
             checkouts.add(channel);
         }
         Integer quantityOfExpresswayCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfExpresswayCheckouts.getId()));
         for (int i = 0; i < quantityOfExpresswayCheckout; no++, i++) {
-            Checkout channel = new Checkout(no + 1, Checkout.CheckoutChannelType.EXPRESSWAY);
+            Checkout channel = new Checkout(no + 1, Checkout.CheckoutType.EXPRESSWAY);
             market.getChildren().add(channel);
             checkouts.add(channel);
         }
         model.outputController.checkoutInitEvent(checkouts);
     }
 
-    private Checkout getBestChannel(boolean isExpresswayAccessible) {
+    private Checkout getBestCheckout(boolean isExpresswayAccessible) {
         Integer min = checkouts.stream()
-                .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutChannelType.NORMAL))
+                .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
                 .mapToInt(v -> v.getCustomers().size()).min().getAsInt();
         List<Checkout> chooseFromList = checkouts.stream()
-                .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutChannelType.NORMAL))
+                .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
                 .filter(c -> c.getCustomers().size() == min)
                 .collect(Collectors.toList());
         int num = ThreadLocalRandom.current().nextInt(0, chooseFromList.size());
@@ -145,7 +145,6 @@ public class SimulatorController extends Controller {
                 businessStatus = true;
                 startButton.setGraphic(new FontIcon("fas-pause"));
                 startButton.setText("pause");
-                resetButton.setDisable(true);
                 shutButton.setDisable(false);
                 resetButton.setDisable(true);
                 model.outputController.addLog("[store] open door", Level.CONFIG);
@@ -167,6 +166,7 @@ public class SimulatorController extends Controller {
         shutButton.setOnAction(actionEvent -> {
             if (businessStatus) {
                 finishSimulation();
+                resetButton.setDisable(false);
             }
             businessStatus = !businessStatus;
         });
@@ -263,13 +263,14 @@ public class SimulatorController extends Controller {
     private void addCustomer(Customer customer) {
         //choose the best checkout
         Integer lessThan = Integer.valueOf(props.getProperty(model.preferenceController.prefExpresswayCheckoutsForProductsLessThan.getId()));
-        Checkout bestChannel;
+        Checkout bestCheckout;
 
-        bestChannel = getBestChannel(customer.getQuantityOfGoods() <= lessThan);
+        bestCheckout = getBestCheckout(customer.getQuantityOfGoods() <= lessThan);
+        customer.setParent(bestCheckout);
 
         model.outputController.customerComeEvent(customer);
-        bestChannel.getCustomers().offer(customer);
-        //todo Platform.runLater(() -> bestChannel.getChildren().add(customer));
+        bestCheckout.getCustomers().offer(customer);
+        //todo Platform.runLater(() -> bestCheckout.getChildren().add(customer));
     }
 
     private void setMarketBackgroundAutoFit() {

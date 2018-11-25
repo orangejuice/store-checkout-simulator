@@ -24,7 +24,7 @@ public class Checkout extends HBox {
     }
 
     public Checkout(int no) {
-        this(no, CheckoutChannelType.NORMAL);
+        this(no, CheckoutType.NORMAL);
     }
 
     public Queue<Customer> getCustomers() {
@@ -39,7 +39,7 @@ public class Checkout extends HBox {
         return type;
     }
 
-    public static class CheckoutChannelType {
+    public static class CheckoutType {
         public static final int NORMAL = 0;
         public static final int EXPRESSWAY = 1;
     }

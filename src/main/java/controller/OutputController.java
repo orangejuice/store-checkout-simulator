@@ -30,8 +30,8 @@ public class OutputController extends Controller {
     }
 
     public void checkoutInitEvent(List<Checkout> checkouts) {
-        long normal = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutChannelType.NORMAL).count();
-        long expressway = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutChannelType.EXPRESSWAY).count();
+        long normal = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutType.NORMAL).count();
+        long expressway = checkouts.stream().filter(checkout -> checkout.getType() == Checkout.CheckoutType.EXPRESSWAY).count();
 
         model.outputController.addLog("[store] ready", Level.CONFIG);
         model.outputController.addLog("[store] equipped with " + normal + " checkout", Level.CONFIG);

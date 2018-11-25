@@ -35,6 +35,7 @@ public class Customer extends StackPane {
     private boolean cannotWait;
     private int waitSec;
     private int waitSecActual;
+    private Checkout parent;
     private ScheduledExecutorService tooltipUpdateExecutorService;
     private ScheduledFuture<?> tooltipUpdateTask;
     private ScheduledExecutorService timeCountService;
@@ -99,12 +100,10 @@ public class Customer extends StackPane {
             int period = 1000000 / playSpeedDivide;
             timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
                 waitSecActual += 1;
-                if (waitSecActual > 300) {
-                    System.out.println(cannotWait + "" + (waitSecActual) + "" + waitSec);
-                }
+
                 if (cannotWait && (waitSecActual >= waitSec)) {
-                    ((Checkout) getParent()).getCustomers().remove(this);
                     MainModel.getInstance().outputController.customerLeaveEvent(this);
+                    parent.getCustomers().remove(this);
                     //todo Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
                 } else {
                     initTimeCountService();
@@ -165,5 +164,9 @@ public class Customer extends StackPane {
 
     public void setBeingServed(boolean beingServed) {
         isBeingServed = beingServed;
+    }
+
+    public void setParent(Checkout parent) {
+        this.parent = parent;
     }
 }

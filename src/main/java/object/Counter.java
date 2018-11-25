@@ -75,7 +75,7 @@ public class Counter extends StackPane {
         label.setStyle("-fx-font-style: italic;-fx-font-weight: bold;" +
                 "-fx-font-size: 16");
         //;-fx-background-color: #00cf53b9
-        if (type == Checkout.CheckoutChannelType.EXPRESSWAY) {
+        if (type == Checkout.CheckoutType.EXPRESSWAY) {
             label.setText("EXPRESSWAY");
         } else {
             label.setText(String.valueOf(no));
@@ -161,7 +161,7 @@ public class Counter extends StackPane {
                     "status: " + (status ? "busying" : "idle") + "\n" +
                     "served customers: " + totalServed + "\n" +
                     "valid time: " + totalServedTime.getSecondOfDay() + "s\n" +
-                    "type: " + (type == Checkout.CheckoutChannelType.NORMAL ? "normal" : "expressway"));
+                    "type: " + (type == Checkout.CheckoutType.NORMAL ? "normal" : "expressway"));
         }), 0, period, TimeUnit.MILLISECONDS);
     }
 
