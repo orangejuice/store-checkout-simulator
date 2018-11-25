@@ -98,12 +98,16 @@ public class Customer extends StackPane {
         if (playSpeedDivide != 0) {
             int period = 1000000 / playSpeedDivide;
             timeCountTask = timeCountService.scheduleAtFixedRate(() -> {
-                initTimeCountService();
                 waitSecActual += 1;
-                if (isCannotWait() && waitSecActual >= getWaitSec()) {
+                if (waitSecActual > 300) {
+                    System.out.println(cannotWait + "" + (waitSecActual) + "" + waitSec);
+                }
+                if (cannotWait && (waitSecActual >= waitSec)) {
                     ((Checkout) getParent()).getCustomers().remove(this);
                     MainModel.getInstance().outputController.customerLeaveEvent(this);
-                    Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
+                    //todo Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
+                } else {
+                    initTimeCountService();
                 }
             }, period, period, TimeUnit.MICROSECONDS);
         }

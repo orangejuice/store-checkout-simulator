@@ -86,7 +86,7 @@ public class SimulatorController extends Controller {
             if (businessStatus && !pauseStatus) {
                 simulateTime = simulateTime.plusSeconds(1);
                 if (simulateTime.getHourOfDay() >= 1) {
-                    finishSimulation();
+                    Platform.runLater(this::finishSimulation);
                 }
                 model.outputController.processBar.setProgress(simulateTime.getSecondOfDay() / 3600.0);
             }
@@ -166,7 +166,7 @@ public class SimulatorController extends Controller {
 
         shutButton.setOnAction(actionEvent -> {
             if (businessStatus) {
-                Platform.runLater(this::finishSimulation);
+                finishSimulation();
             }
             businessStatus = !businessStatus;
         });
