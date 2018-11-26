@@ -50,9 +50,14 @@ public class OutputController extends Controller {
         addLog("[checkout" + checkout.getCounter().getNo() + "] served customer" + customer.getNo(), Level.INFO);
     }
 
-    public void customerLeaveEvent(Customer customer) {
-        addLog("[customer] [leave] customer" + customer.getNo()
-                + " leaved after waiting for " + customer.getWaitSec() + "s", Level.WARNING);
+    public void customerLeaveEvent(Customer customer, int leaveEvent) {
+        if (leaveEvent == LeaveEvent.TOO_LONG_QUEUE) {
+            addLog("[customer] [leave] customer" + customer.getNo()
+                    + " leaved with anger because the queues are too long!", Level.WARNING);
+        } else {
+            addLog("[customer] [leave] customer" + customer.getNo()
+                    + " leaved after waiting for " + customer.getWaitSec() + "s", Level.WARNING);
+        }
     }
 
     public void addLog(String text, Level level) {
@@ -76,6 +81,10 @@ public class OutputController extends Controller {
         Label label = new Label("[" + DateTimeFormat.forPattern("HH:mm:ss")
                 .print(model.simulatorController.getSimulateTime()) + "] " + text, fontIcon);
         Platform.runLater(() -> logListView.getItems().add(label));
-        //todo follow when scrollbar show up
+    }
+
+    public static class LeaveEvent {
+        public static final int TOO_LONG_QUEUE = 0;
+        public static final int WAIT_TIME = 1;
     }
 }

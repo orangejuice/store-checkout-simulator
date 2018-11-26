@@ -44,7 +44,6 @@ public class Counter extends StackPane {
 
         totalServedTime = new DateTime().secondOfDay().setCopy(0);
         totalServedProducts = new HashMap<>();
-        initTooltipService(500);
         initScanService(1000000);
 
         ImageView counterImageView = new ImageView();
@@ -59,9 +58,11 @@ public class Counter extends StackPane {
         tooltip.setShowDelay(Duration.ZERO);
         tooltip.setStyle("-fx-font-weight: bold");
         setOnMouseMoved(mouseEvent -> {
+            initTooltipService(500);
             tooltip.show((Node) mouseEvent.getSource(), mouseEvent.getScreenX() + 5, mouseEvent.getScreenY() + 15);
         });
         setOnMouseExited(mouseEvent -> {
+            initTooltipService(0);
             tooltip.hide();
         });
 
@@ -97,6 +98,7 @@ public class Counter extends StackPane {
                     setBusying(true, playSpeedDivide);
                     // offer poll/peek for queue
                     Customer nowCustomer = channel.getCustomers().peek();
+                    ((Checkout) getParent()).getCustomerQueue().setNowCustomer(nowCustomer);
                     nowCustomer.setBeingServed(true);
 
                     int total = nowCustomer.getQuantityOfGoods();
@@ -117,9 +119,8 @@ public class Counter extends StackPane {
                     nowCustomer.setQuantityWaitForCheckout(--waitFor);
 
                     // change the arc
-                    synchronized (MainModel.getInstance()) {
-                        nowCustomer.getArc().setLength(360.0 * waitFor / total);
-                    }
+                    double l = 360.0 * nowCustomer.getQuantityWaitForCheckout() / nowCustomer.getQuantityOfGoods();
+                    ((Checkout) getParent()).getCustomerQueue().updateArc(l);
 
                     // if 0, delete
                     if (waitFor == 0) {
@@ -160,7 +161,9 @@ public class Counter extends StackPane {
             int period = 1000000 / playSpeedDivide;
             timeCountTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> {
                 initTimeCountService();
-                totalServedTime = totalServedTime.plusSeconds(1);
+                if (!MainModel.getInstance().pauseStatus) {
+                    totalServedTime = totalServedTime.plusSeconds(1);
+                }
             }, period, period, TimeUnit.MICROSECONDS);
         }
     }
@@ -169,10 +172,12 @@ public class Counter extends StackPane {
         if (tooltipUpdateTask != null) {
             tooltipUpdateTask.cancel(false);
         }
+        if (period == 0) {
+            return;
+        }
         tooltipUpdateTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> Platform.runLater(() -> {
             tooltip.setText("Checkout " + no + "\n\n" +
                     "status: " + (status ? "busying" : "idle") + "\n" +
-                    "waiting customers: " + (((Checkout) getParent()).getCustomers().size() + ((Checkout) getParent()).getCustomers().size()) + "\n" +
                     "served customers: " + totalServedCustomers + "\n" +
                     "valid time: " + totalServedTime.getSecondOfDay() + "s\n" +
                     "type: " + (type == Checkout.CheckoutType.NORMAL ? "normal" : "expressway"));

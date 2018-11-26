@@ -6,8 +6,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Slider;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import object.Checkout;
 import object.Customer;
 import org.joda.time.DateTime;
@@ -21,7 +21,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -33,7 +32,7 @@ public class SimulatorController extends Controller {
     public ImageView entry;
     public ImageView shelf2;
     public ScrollPane background;
-    public VBox market;
+    public FlowPane market;
     public Button startButton;
     public Button shutButton;
     public Button resetButton;
@@ -49,8 +48,6 @@ public class SimulatorController extends Controller {
     private ScheduledFuture<?> timeCountTask;
     private ScheduledFuture<?> finishSimulationTask;
 
-    //todo bug of "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 2
-    //todo shield element operation in fxml is helpful.
     public void initialize(URL location, ResourceBundle resources) {
         setMarketBackgroundAutoFit();
         props = PropertiesTool.getProps();
@@ -83,6 +80,7 @@ public class SimulatorController extends Controller {
             timeCountTask.cancel(false);
         }
         timeCountTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
+            initTimeCountService();
             if (!model.pauseStatus) {
                 simulateTime = simulateTime.plusSeconds(1);
                 if (simulateTime.getHourOfDay() >= 1 && finishSimulationTask == null) {
@@ -108,6 +106,7 @@ public class SimulatorController extends Controller {
 
     private void initCheckout() {
         market.getChildren().removeIf(node -> node.getClass() != HBox.class);
+        model.checkouts.clear();
 
         Integer quantityOfCheckout = Integer.valueOf(props.getProperty(model.preferenceController.prefQuantityOfCheckouts.getId()));
         int no = 0;
@@ -128,10 +127,10 @@ public class SimulatorController extends Controller {
     private Checkout getBestCheckout(boolean isExpresswayAccessible) {
         Integer min = model.checkouts.stream()
                 .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
-                .mapToInt(v -> (v.getCustomers().size() + v.getWaitingCustomers().size())).min().getAsInt();
+                .mapToInt(v -> v.getCustomers().size()).min().getAsInt();
         List<Checkout> chooseFromList = model.checkouts.stream()
                 .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
-                .filter(c -> (c.getCustomers().size() + c.getWaitingCustomers().size()) == min)
+                .filter(c -> c.getCustomers().size() == min)
                 .collect(Collectors.toList());
         int num = ThreadLocalRandom.current().nextInt(0, chooseFromList.size());
 
@@ -168,7 +167,6 @@ public class SimulatorController extends Controller {
             if (businessStatus) {
                 finishSimulation();
             }
-            businessStatus = !businessStatus;
         });
 
         resetButton.setOnAction(actionEvent -> {
@@ -196,7 +194,6 @@ public class SimulatorController extends Controller {
                 return;
             }
             initCustomerComingService();
-            initTimeCountService();
         });
     }
 
@@ -220,13 +217,6 @@ public class SimulatorController extends Controller {
                 model.outputController.addLog("[store] simulation finish. Thank you.", Level.CONFIG);
             }
         }, 0, 1, TimeUnit.SECONDS);
-        model.getThreadPoolExecutor().execute(() -> {
-            try {
-                finishSimulationTask.get();
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
     }
 
     private void initCustomerComingService() {
@@ -254,7 +244,6 @@ public class SimulatorController extends Controller {
                 Integer quantityFrom = Integer.valueOf(props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerFrom.getId()));
                 Integer quantityTo = Integer.valueOf(props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerTo.getId()));
                 int quantity = ThreadLocalRandom.current().nextInt(quantityFrom, quantityTo + 1);
-
                 //temper
                 double temper = Math.random();
                 double temperDivide = 0;

@@ -94,7 +94,6 @@
             </FlowPane>
             <TextField editable="false" layoutX="10.0" layoutY="97.0" style="-fx-font-weight: bold"
                        styleClass="copyable-label" text="record"/>
-            <!--<TextArea editable="false" fx:id="recordDetail" styleClass="copyable-label"/>-->
         </VBox>
     </ScrollPane>
 </AnchorPane>

@@ -1,8 +1,6 @@
 package object;
 
-import javafx.application.Platform;
-import javafx.geometry.Pos;
-import javafx.scene.control.Label;
+import controller.OutputController.LeaveEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -14,39 +12,22 @@ import java.util.Queue;
 
 public class Checkout extends HBox {
     private Counter counter;
-    private Label moreLabel;
-
+    private CustomerQueue customerQueue;
     private Queue<Customer> customers = new LinkedList<>();
-    private Queue<Customer> waitingCustomers = new LinkedList<>();
-    private boolean more;
     private int type;
 
     public Checkout(int no, int type) {
-        setMinWidth(0);
+        setMinWidth(580);
         VBox.setVgrow(this, Priority.ALWAYS);
 
         this.type = type;
         counter = new Counter(no, type, true);
-
-        moreLabel = new Label("...");
-        moreLabel.setVisible(false);
-        moreLabel.setStyle("-fx-font-size: 24; -fx-font-weight: bold");
-
-        getChildren().addAll(counter, moreLabel);
-
-        setAlignment(Pos.BOTTOM_LEFT);
+        customerQueue = new CustomerQueue();
+        getChildren().addAll(counter, customerQueue);
     }
 
     public Checkout(int no) {
         this(no, CheckoutType.NORMAL);
-    }
-
-    public Queue<Customer> getCustomers() {
-        return customers;
-    }
-
-    public Queue<Customer> getWaitingCustomers() {
-        return waitingCustomers;
     }
 
     public Counter getCounter() {
@@ -59,17 +40,14 @@ public class Checkout extends HBox {
 
     public void addCustomer(Customer customer) {
         synchronized (this) {
-            if (more) {
-                waitingCustomers.offer(customer);
-            } else if (getChildren().size() >= 5) {
-                waitingCustomers.offer(customer);
-                Platform.runLater(() -> moreLabel.setVisible(true));
-                more = !more;
-            } else {
-                customers.offer(customer);
-                Platform.runLater(() -> getChildren().add(getChildren().size() - 1, customer));
-            }
             MainModel.getInstance().outputController.customerComeEvent(customer);
+            if (this.customers.size() > 20) {
+                MainModel.getInstance().leftCustomers.add(customer);
+                MainModel.getInstance().outputController.customerLeaveEvent(customer, LeaveEvent.TOO_LONG_QUEUE);
+                return;
+            }
+            customers.offer(customer);
+            customerQueue.updateQuantity(customers.size());
         }
     }
 
@@ -81,23 +59,19 @@ public class Checkout extends HBox {
                 MainModel.getInstance().outputController.customerCheckoutEvent(this, customer);
             } else {
                 MainModel.getInstance().leftCustomers.add(customer);
-                MainModel.getInstance().outputController.customerLeaveEvent(customer);
-                waitingCustomers.remove(customer);
-                customers.remove(customer);
+                MainModel.getInstance().outputController.customerLeaveEvent(customer, LeaveEvent.WAIT_TIME);
             }
-            Platform.runLater(() -> getChildren().remove(customer));
-
-            if (getChildren().size() <= 5) {
-                if (waitingCustomers.size() > 0) {
-                    Customer poll = waitingCustomers.poll();
-                    customers.offer(poll);
-                    Platform.runLater(() -> getChildren().add(getChildren().size() - 1, poll));
-                }
-                if (waitingCustomers.size() == 0) {
-                    Platform.runLater(() -> moreLabel.setVisible(false));
-                }
-            }
+            customers.remove(customer);
+            customerQueue.updateQuantity(customers.size());
         }
+    }
+
+    public Queue<Customer> getCustomers() {
+        return customers;
+    }
+
+    public CustomerQueue getCustomerQueue() {
+        return customerQueue;
     }
 
     public static class CheckoutType {

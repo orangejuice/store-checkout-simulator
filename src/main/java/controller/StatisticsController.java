@@ -1,24 +1,30 @@
 package controller;
 
+import application.MainApp;
+import com.itextpdf.text.Document;
+import com.itextpdf.text.pdf.PdfWriter;
 import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.embed.swing.SwingFXUtils;
 import javafx.geometry.Side;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.chart.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import object.Customer;
 import object.TextAreaExpandable;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import util.PropertiesTool;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -40,7 +46,7 @@ public class StatisticsController extends Controller {
     public LineChart totalProductionProcessedLine;
     public TextAreaExpandable recordDetail;
     public VBox VBox;
-    public Button exportButton;//todo export pdf
+    public Button exportButton;
 
     private Properties props = PropertiesTool.getProps();
     private ObservableList<PieChart.Data> waitTimeDistributionPieData;
@@ -73,6 +79,39 @@ public class StatisticsController extends Controller {
 
         recordDetail = new TextAreaExpandable();
         VBox.getChildren().add(recordDetail);
+
+        exportButton.setOnAction(event -> {
+            try {
+                BufferedImage bufferedImage = SwingFXUtils.fromFXImage(ReportPane.getContent().snapshot(new SnapshotParameters(), null), null);
+                FileChooser fileChooser = new FileChooser();
+                fileChooser.setInitialFileName("SimulationReport.pdf");
+                fileChooser.setTitle("choose path");
+                File file = fileChooser.showSaveDialog(MainApp.getPrimaryStage());
+                FileOutputStream out = new FileOutputStream(file);
+                javax.imageio.ImageIO.write(bufferedImage, "png", out);
+                out.flush();
+                out.close();
+
+                com.itextpdf.text.Image image = com.itextpdf.text.Image.getInstance(file.getAbsolutePath());
+                image.scalePercent(100);
+                Document doc = new Document(new com.itextpdf.text.Rectangle(image.getScaledWidth(), image.getScaledHeight()));
+                FileOutputStream fos = new FileOutputStream(file);
+                PdfWriter.getInstance(doc, fos);
+                doc.open();
+                doc.newPage();
+                image.setAbsolutePosition(0, 0);
+                doc.add(image);
+                fos.flush();
+                doc.close();
+                fos.close();
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "save successful!", ButtonType.YES);
+                alert.showAndWait();
+            } catch (Exception e) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION, "save fails!", ButtonType.YES);
+                alert.showAndWait();
+            }
+
+        });
     }
 
     public void initStatistics(List<String> names) {
@@ -91,7 +130,7 @@ public class StatisticsController extends Controller {
         percentageOfACustomerCanNotWait.setText(MessageFormat.format("percentage of a customer who can not wait: {0}", cantWait));
         CustomerWillLeaveAfter.setText(MessageFormat.format("customer will leave after waiting for: {0}", leaveAfter));
         quantityOfNormalCheckouts.setText(MessageFormat.format("quantity of normal checkouts: {0}", checkouts));
-        quantityOfExpresswayCheckouts.setText(MessageFormat.format("quantity of normal expressway: {0}", expresswayCheckouts));
+        quantityOfExpresswayCheckouts.setText(MessageFormat.format("quantity of expressway checkouts: {0}", expresswayCheckouts));
         ExpresswayCheckoutsFor.setText(MessageFormat.format("expressway checkouts for products less than {0}", expresswayForLessThan));
         rangeOfScanTime.setText(MessageFormat.format("range of each product scan time: from {0} to {1}", scanFrom, scanTo));
         date.setText("date: " + DateTimeFormat.forPattern("EEEE, dd MMMM yyyy (ZZZ)").print(new DateTime()));
@@ -104,6 +143,7 @@ public class StatisticsController extends Controller {
         hasProcessedCustomers = 0;
         hasProcessedProductsMinute = names.stream().collect(Collectors.toMap(s -> s, s -> 1));
         recordDetail.setText("available after simulation finished...");
+        exportButton.setDisable(true);
     }
 
     public void initStatisticsTask() {
@@ -112,55 +152,51 @@ public class StatisticsController extends Controller {
         }
         date.setText(date.getText() + "   start: " + DateTimeFormat.forPattern("HH:mm:ss").print(new DateTime()));
         timeTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
-            String waitSecPeriod;
-            for (int i = hasProcessedCustomers; i < model.leftCustomers.size(); i++) {
-                Customer customer = model.leftCustomers.get(i);
-                if (customer.isCannotWait() && (customer.getWaitSecActual() >= customer.getWaitSec())) {
-                    waitSecPeriod = "leave";
-                } else if (customer.getWaitSecActual() <= 60) {
-                    waitSecPeriod = "<1min";
-                } else if (customer.getWaitSecActual() <= 300) {
-                    waitSecPeriod = "1-5min";
-                } else if (customer.getWaitSecActual() <= 600) {
-                    waitSecPeriod = "5-10min";
-                } else if (customer.getWaitSecActual() <= 900) {
-                    waitSecPeriod = "10-15min";
-                } else if (customer.getWaitSecActual() <= 1200) {
-                    waitSecPeriod = "15-20min";
-                } else {
-                    waitSecPeriod = ">20min";
+            if (!model.pauseStatus) {
+                String waitSecPeriod;
+                for (int i = hasProcessedCustomers; i < model.leftCustomers.size(); i++) {
+                    Customer customer = model.leftCustomers.get(i);
+                    if (customer.isCannotWait() && (customer.getWaitSecActual() >= customer.getWaitSec())) {
+                        waitSecPeriod = "leave";
+                    } else if (customer.getWaitSecActual() <= 60) {
+                        waitSecPeriod = "<1min";
+                    } else if (customer.getWaitSecActual() <= 300) {
+                        waitSecPeriod = "1-5min";
+                    } else if (customer.getWaitSecActual() <= 600) {
+                        waitSecPeriod = "5-10min";
+                    } else if (customer.getWaitSecActual() <= 900) {
+                        waitSecPeriod = "10-15min";
+                    } else if (customer.getWaitSecActual() <= 1200) {
+                        waitSecPeriod = "15-20min";
+                    } else {
+                        waitSecPeriod = ">20min";
+                    }
+                    updateWaitTimeDistributionPie(waitSecPeriod);
+                    updateWaitTimeEachCustomerScatter(customer.parent.getCounter().getNo(), customer.getNo(), customer.getWaitSecActual());
                 }
-                updateWaitTimeDistributionPie(waitSecPeriod);
-                updateWaitTimeEachCustomerScatter(customer.parent.getCounter().getNo(), customer.getNo(), customer.getWaitSecActual());
+                model.checkouts.forEach(checkout -> {
+                    double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
+                    updateUtilizationEachCheckoutBar(checkout.getCounter().getNo(), v);
+
+                    Map<Integer, Integer> totalServed = checkout.getCounter().getTotalServedProducts();
+                    int minute = model.simulatorController.getSimulateTime().getMinuteOfDay() + 1;
+
+                    Integer lastTimeMinute = hasProcessedProductsMinute.get("checkout" + checkout.getCounter().getNo());
+
+                    if (minute != lastTimeMinute) {
+                        updateTotalProductionProcessedLine(checkout.getCounter().getNo(), minute - 1, totalServed.getOrDefault(minute - 1, 0));
+                        hasProcessedProductsMinute.put("checkout" + checkout.getCounter().getNo(), minute);
+                    } else {
+                        updateTotalProductionProcessedLine(checkout.getCounter().getNo(), minute, totalServed.getOrDefault(minute, 0));
+                    }
+                });
+                hasProcessedCustomers = model.leftCustomers.size();
             }
-            model.checkouts.forEach(checkout -> {
-                double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
-                updateUtilizationEachCheckoutBar(checkout.getCounter().getNo(), v);
-
-                Map<Integer, Integer> totalServed = checkout.getCounter().getTotalServedProducts();
-                int minute = model.simulatorController.getSimulateTime().getMinuteOfDay() + 1;
-
-                Integer lastTimeMinute = hasProcessedProductsMinute.get("checkout" + checkout.getCounter().getNo());
-
-                if (minute != lastTimeMinute) {
-                    updateTotalProductionProcessedLine(checkout.getCounter().getNo(), minute - 1, totalServed.getOrDefault(minute - 1, 0));
-                    hasProcessedProductsMinute.put("checkout" + checkout.getCounter().getNo(), minute);
-                } else {
-                    updateTotalProductionProcessedLine(checkout.getCounter().getNo(), minute, totalServed.getOrDefault(minute, 0));
-                }
-            });
-            hasProcessedCustomers = model.leftCustomers.size();
         }, 0, 1, TimeUnit.SECONDS);
-        model.getThreadPoolExecutor().execute(() -> {
-            try {
-                timeTask.get();
-            } catch (ExecutionException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        });
     }
 
     public void completeStatisticsTask() {
+        exportButton.setDisable(false);
         if (timeTask != null) {
             timeTask.cancel(false);
         }
@@ -186,7 +222,7 @@ public class StatisticsController extends Controller {
             double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
             detail.append(format.format(v) + "%\n");
         });
-        detail.append("\n\nextend of busy:\n" +
+        detail.append("\n\n*extend of busy:\n" +
                 "    - very idle 5 comes per min /period 12s\n" +
                 "    - idle 10 comes per min /period 6s\n" +
                 "    - normal 20 comes per min /period 3s\n" +

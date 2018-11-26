@@ -1,5 +1,9 @@
 # Supermarket Checkout Simulator
 
+![demo](src/main/resources/image/screenshot%20(5).png "demo")
+
+![demo](src/main/resources/image/screenshot%20(3).png "demo")
+
 
 ##### preference Panel functions
 1. read/save preference.
@@ -44,7 +48,7 @@
 FXMLLoaderHelper (in unnamed module @0xcb6a90) cannot access class com.sun.javafx.util.Utils (in module javafx.graphics) because module javafx.graphics does not export com.sun.javafx.util to unnamed module @0xcb6a90
 `
 refer to the 'module-info.java' file.
-2. another problem. confusing deeply. fixed 11/26, refer to Arc update
+2. another problem. confusing deeply. fixed 11/26, occurred by Arc update
 `
 Exception in thread "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 4
 	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
@@ -60,10 +64,10 @@ Exception in thread "JavaFX Application Thread" java.lang.IndexOutOfBoundsExcept
 https://bugs.openjdk.java.net/browse/JDK-8163078
 https://bugs.openjdk.java.net/browse/JDK-8198577
 
-
 # Reference
 1. https://melbournechapter.net/explore/grocery-clipart-customer-shopping/
 2. https://github.com/cping/LGame/tree/master/dev-res
 3. https://openjfx.io/openjfx-docs/#IDE-Intellij
 4. http://aalmiray.github.io/ikonli/cheat-sheet-fontawesome5.html#_regular
 5. http://aalmiray.github.io/ikonli/#_fontawesome5
+5. https://stackoverflow.com/questions/29941817/save-javafx-scrollpane-content-to-pdf-file?rq=1
