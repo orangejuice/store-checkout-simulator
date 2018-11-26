@@ -175,12 +175,12 @@ public class StatisticsController extends Controller {
                 "products sold: " + model.checkouts.stream().mapToInt(value -> value.getCounter().getTotalServedProducts().values().stream().mapToInt(Integer::intValue).sum()).sum() + "\n");
         DecimalFormat format = new DecimalFormat("#0.00");
         detail.append("\n\naverage\n" +
-                "customer wait time: " + format.format(model.leftCustomers.stream().mapToInt(Customer::getWaitSecActual).average().orElse(0)) + "\t\t\t\t" +
+                "customer wait time: " + format.format(model.leftCustomers.stream().mapToInt(Customer::getWaitSecActual).average().orElse(0)) + "\t\t\t" +
                 "customer wait time(except left ones): " + format.format(model.leftCustomers.stream().filter(customer -> !(customer.isCannotWait() && (customer.getWaitSecActual() >= customer.getWaitSec()))).mapToInt(Customer::getWaitSecActual).average().orElse(0)) + "\n" +
                 "checkout utilization: " + format.format(model.checkouts.stream().mapToDouble(value -> 100.0 * value.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay()).average().orElse(0)) + "%\t\t\t" +
                 "products per trolley: " + format.format(model.leftCustomers.stream().mapToInt(Customer::getQuantityOfGoods).average().orElse(0)) + "\n");
         model.checkouts.stream().forEach(checkout -> {
-            detail.append("checkout" + checkout.getCounter().getNo() + ": ");
+            detail.append("checkout" + checkout.getCounter().getNo() + " utilization: ");
             double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
             detail.append(format.format(v) + "%\n");
         });
