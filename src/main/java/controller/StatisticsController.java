@@ -86,7 +86,7 @@ public class StatisticsController extends Controller {
         String scanTo = props.getProperty(model.preferenceController.prefRangeOfEachProductScanTimeTo.getId());
         String goodsFrom = props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerFrom.getId());
         String goodsTo = props.getProperty(model.preferenceController.prefRangeOfGoodsQuantityPerCustomerTo.getId());
-        extendOfBusy.setText(MessageFormat.format("extend of busy: {0}", extend));
+        extendOfBusy.setText(MessageFormat.format("extend of busy*: {0}", extend));
         rangeOfGoodsQuantity.setText(MessageFormat.format("range of goods quantity: from {0} to {1}", goodsFrom, goodsTo));
         percentageOfACustomerCanNotWait.setText(MessageFormat.format("percentage of a customer who can not wait: {0}", cantWait));
         CustomerWillLeaveAfter.setText(MessageFormat.format("customer will leave after waiting for: {0}", leaveAfter));
@@ -160,7 +160,7 @@ public class StatisticsController extends Controller {
         });
     }
 
-    public void cancelStatisticsTask() {
+    public void completeStatisticsTask() {
         if (timeTask != null) {
             timeTask.cancel(false);
         }
@@ -186,6 +186,12 @@ public class StatisticsController extends Controller {
             double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
             detail.append(format.format(v) + "%\n");
         });
+        detail.append("\n\nextend of busy:\n" +
+                "    - very idle 5 comes per min /period 12s\n" +
+                "    - idle 10 comes per min /period 6s\n" +
+                "    - normal 20 comes per min /period 3s\n" +
+                "    - busy 40 comes per min /period 1.5s\n" +
+                "    - very busy 80 comes per min /period 0.75s\n");
         recordDetail.setText(detail.toString());
     }
 

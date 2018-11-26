@@ -128,10 +128,10 @@ public class SimulatorController extends Controller {
     private Checkout getBestCheckout(boolean isExpresswayAccessible) {
         Integer min = model.checkouts.stream()
                 .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
-                .mapToInt(v -> v.getCustomers().size()).min().getAsInt();
+                .mapToInt(v -> (v.getCustomers().size() + v.getWaitingCustomers().size())).min().getAsInt();
         List<Checkout> chooseFromList = model.checkouts.stream()
                 .filter(c -> isExpresswayAccessible || (c.getType() == Checkout.CheckoutType.NORMAL))
-                .filter(c -> c.getCustomers().size() == min)
+                .filter(c -> (c.getCustomers().size() + c.getWaitingCustomers().size()) == min)
                 .collect(Collectors.toList());
         int num = ThreadLocalRandom.current().nextInt(0, chooseFromList.size());
 
@@ -214,7 +214,7 @@ public class SimulatorController extends Controller {
             if (model.checkouts.stream().noneMatch(checkout -> checkout.getCounter().isBusying())) {
                 finishSimulationTask.cancel(false);
                 timeCountTask.cancel(false);
-                model.statisticsController.cancelStatisticsTask();
+                model.statisticsController.completeStatisticsTask();
                 model.outputController.addLog("[store] all customers have gone.", Level.CONFIG);
                 model.outputController.addLog("[store] door closed.", Level.CONFIG);
                 model.outputController.addLog("[store] simulation finish. Thank you.", Level.CONFIG);
@@ -268,23 +268,14 @@ public class SimulatorController extends Controller {
                 String mins = minsText.replaceAll("mins", "");
                 int waitSec = Integer.valueOf(mins) * 60;
 
-                Customer customer = new Customer(++customerNo, quantity, cannotWait, waitSec);
-                addCustomer(customer);
+                //choose the best checkout
+                Integer lessThan = Integer.valueOf(props.getProperty(model.preferenceController.prefExpresswayCheckoutsForProductsLessThan.getId()));
+                Checkout bestCheckout = getBestCheckout(quantity <= lessThan);
+
+                Customer customer = new Customer(++customerNo, quantity, cannotWait, waitSec, bestCheckout);
+                bestCheckout.addCustomer(customer);
             }
         }, period, period, TimeUnit.MICROSECONDS);
-    }
-
-    private void addCustomer(Customer customer) {
-        //choose the best checkout
-        Integer lessThan = Integer.valueOf(props.getProperty(model.preferenceController.prefExpresswayCheckoutsForProductsLessThan.getId()));
-        Checkout bestCheckout;
-
-        bestCheckout = getBestCheckout(customer.getQuantityOfGoods() <= lessThan);
-        customer.parent = bestCheckout;
-
-        model.outputController.customerComeEvent(customer);
-        bestCheckout.getCustomers().offer(customer);
-        Platform.runLater(() -> bestCheckout.getChildren().add(customer));
     }
 
     private void setMarketBackgroundAutoFit() {

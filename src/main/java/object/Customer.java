@@ -22,6 +22,8 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class Customer extends StackPane {
+    public Checkout parent;
+
     private static Image trolley;
     private Tooltip tooltip;
     private Arc arc;
@@ -32,11 +34,10 @@ public class Customer extends StackPane {
     private boolean cannotWait;
     private int waitSec;
     private int waitSecActual;
-    public Checkout parent;
     private ScheduledFuture<?> tooltipUpdateTask;
     private ScheduledFuture<?> timeCountTask;
 
-    public Customer(int no, int quantityOfGoods, boolean cannotWait, int waitSec) {
+    public Customer(int no, int quantityOfGoods, boolean cannotWait, int waitSec, Checkout parent) {
         this.no = no;
         this.quantityOfGoods = quantityOfGoods;
         this.quantityWaitForCheckout = quantityOfGoods;
@@ -44,6 +45,7 @@ public class Customer extends StackPane {
         this.waitSecActual = 0;
         this.waitSec = waitSec;
         this.isBeingServed = false;
+        this.parent = parent;
 
         ImageView customerImageView = new ImageView();
         customerImageView.setFitHeight(150);
@@ -95,11 +97,7 @@ public class Customer extends StackPane {
                 waitSecActual += 1;
 
                 if (cannotWait && (waitSecActual >= waitSec)) {
-                    MainModel.getInstance().leftCustomers.add(this);
-                    MainModel.getInstance().outputController.customerLeaveEvent(this);
-                    parent.getCustomers().remove(this);
-                    Platform.runLater(() -> ((Checkout) getParent()).getChildren().remove(this));
-                    this.leave();
+                    parent.leaveCustomer(this, false);
                 } else {
                     initTimeCountService();
                 }

@@ -44,7 +44,7 @@
 FXMLLoaderHelper (in unnamed module @0xcb6a90) cannot access class com.sun.javafx.util.Utils (in module javafx.graphics) because module javafx.graphics does not export com.sun.javafx.util to unnamed module @0xcb6a90
 `
 refer to the 'module-info.java' file.
-2. another problem. confusing deeply.
+2. another problem. confusing deeply. fixed 11/26, refer to Arc update
 `
 Exception in thread "JavaFX Application Thread" java.lang.IndexOutOfBoundsException: Index -1 out of bounds for length 4
 	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
@@ -56,6 +56,7 @@ Exception in thread "JavaFX Application Thread" java.lang.IndexOutOfBoundsExcept
 	at javafx.base/com.sun.javafx.collections.VetoableListDecorator.get(VetoableListDecorator.java:306)
 	at javafx.graphics/javafx.scene.Parent.updateCachedBounds(Parent.java:1701)
 `
+
 https://bugs.openjdk.java.net/browse/JDK-8163078
 https://bugs.openjdk.java.net/browse/JDK-8198577
 

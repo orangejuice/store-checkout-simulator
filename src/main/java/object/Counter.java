@@ -125,10 +125,7 @@ public class Counter extends StackPane {
                     if (waitFor == 0) {
                         totalServedCustomers += 1;
                         Customer customer = channel.getCustomers().poll();
-                        MainModel.getInstance().leftCustomers.add(customer);
-                        MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
-                        Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
-                        customer.leave();
+                        ((Checkout) getParent()).leaveCustomer(customer, true);
                     }
                 } else {
                     setBusying(false, 0);
@@ -175,6 +172,7 @@ public class Counter extends StackPane {
         tooltipUpdateTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> Platform.runLater(() -> {
             tooltip.setText("Checkout " + no + "\n\n" +
                     "status: " + (status ? "busying" : "idle") + "\n" +
+                    "waiting customers: " + (((Checkout) getParent()).getCustomers().size() + ((Checkout) getParent()).getCustomers().size()) + "\n" +
                     "served customers: " + totalServedCustomers + "\n" +
                     "valid time: " + totalServedTime.getSecondOfDay() + "s\n" +
                     "type: " + (type == Checkout.CheckoutType.NORMAL ? "normal" : "expressway"));
