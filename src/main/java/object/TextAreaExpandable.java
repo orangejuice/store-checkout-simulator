@@ -19,7 +19,7 @@ public class TextAreaExpandable extends TextArea {
         disableEnter();
         setEditable(false);
 
-        setStyle("-fx-background-color: transparent;");
+        setStyle("-fx-background-color: transparent; -fx-font-size: 14");
     }
 
     @Override

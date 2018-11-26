@@ -14,6 +14,7 @@ import org.joda.time.format.DateTimeFormat;
 import util.PropertiesTool;
 
 import java.net.URL;
+import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -41,7 +42,7 @@ public class StatisticsController extends Controller {
 
     private Properties props = PropertiesTool.getProps();
     private ObservableList<PieChart.Data> waitTimeDistributionPieData;
-    private Map<String, Integer> waitTimeDistributionPieMap;
+    private Map<String, Integer> waitTimeDistributionMap;
     private ScheduledFuture<?> timeTask;
     private int hasProcessedCustomers;
     private Map<String, Integer> hasProcessedProductsMinute;
@@ -51,7 +52,7 @@ public class StatisticsController extends Controller {
         waitTimeDistributionPie.setTitle("the distribution of wait time period");
         waitTimeDistributionPie.setLegendSide(Side.RIGHT);
         waitTimeDistributionPieData = waitTimeDistributionPie.getData();
-        waitTimeDistributionPieMap = new HashMap<>();
+        waitTimeDistributionMap = new HashMap<>();
 
         waitTimeEachCustomerScatter.setTitle("each customer wait time");
         waitTimeEachCustomerScatter.getXAxis().setLabel("customer(no)");
@@ -162,7 +163,28 @@ public class StatisticsController extends Controller {
             timeTask.cancel(false);
         }
         date.setText(date.getText() + "   end: " + DateTimeFormat.forPattern("HH:mm:ss").print(new DateTime()));
-        recordDetail.setText("123fasfs\ngafasfasf");
+        StringBuilder detail = new StringBuilder("total\n" +
+                "customers: " + model.leftCustomers.size() + "\n" +
+                "wait for less than 1min: " + waitTimeDistributionMap.get("<1min") + "\t\t\t" +
+                "wait for 1-5mins: " + waitTimeDistributionMap.get("<1min") + "\t\t\t\t" +
+                "wait for 5-10mins: " + waitTimeDistributionMap.get("5-10min") + "\n" +
+                "wait for 10-15mins: " + waitTimeDistributionMap.get("10-15min") + "\t\t\t\t" +
+                "wait for 15-20mins: " + waitTimeDistributionMap.get("15-20min") + "\t\t\t" +
+                "wait for more than 20mins: " + waitTimeDistributionMap.get(">20min") + "\n" +
+                "lost customers: " + waitTimeDistributionMap.get("leave") + "\t\t\t\t\t" +
+                "products sold: " + model.checkouts.stream().mapToInt(value -> value.getCounter().getTotalServedProducts().values().stream().mapToInt(Integer::intValue).sum()).sum() + "\n");
+        DecimalFormat format = new DecimalFormat("#0.00");
+        detail.append("\n\naverage\n" +
+                "customer wait time: " + format.format(model.leftCustomers.stream().mapToInt(Customer::getWaitSecActual).average().orElse(0)) + "\t\t\t\t" +
+                "customer wait time(except left ones): " + format.format(model.leftCustomers.stream().filter(customer -> !(customer.isCannotWait() && (customer.getWaitSecActual() >= customer.getWaitSec()))).mapToInt(Customer::getWaitSecActual).average().orElse(0)) + "\n" +
+                "checkout utilization: " + format.format(model.checkouts.stream().mapToDouble(value -> 100.0 * value.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay()).average().orElse(0)) + "%\t\t\t" +
+                "products per trolley: " + format.format(model.leftCustomers.stream().mapToInt(Customer::getQuantityOfGoods).average().orElse(0)) + "\n");
+        model.checkouts.stream().forEach(checkout -> {
+            detail.append("checkout" + checkout.getCounter().getNo() + ": ");
+            double v = 100.0 * checkout.getCounter().getTotalServedTime().getSecondOfDay() / model.simulatorController.getSimulateTime().getSecondOfDay();
+            detail.append(format.format(v) + "%\n");
+        });
+        recordDetail.setText(detail.toString());
     }
 
     public void initWaitTimeEachCustomerScatter(List<String> names) {
@@ -213,20 +235,20 @@ public class StatisticsController extends Controller {
                 new PieChart.Data("15-20min", 0),
                 new PieChart.Data(">20min", 0),
                 new PieChart.Data("leave", 0));
-        waitTimeDistributionPieMap.put("<1min", 0);
-        waitTimeDistributionPieMap.put("1-5min", 0);
-        waitTimeDistributionPieMap.put("5-10min", 0);
-        waitTimeDistributionPieMap.put("10-15min", 0);
-        waitTimeDistributionPieMap.put("15-20min", 0);
-        waitTimeDistributionPieMap.put(">20min", 0);
-        waitTimeDistributionPieMap.put("leave", 0);
+        waitTimeDistributionMap.put("<1min", 0);
+        waitTimeDistributionMap.put("1-5min", 0);
+        waitTimeDistributionMap.put("5-10min", 0);
+        waitTimeDistributionMap.put("10-15min", 0);
+        waitTimeDistributionMap.put("15-20min", 0);
+        waitTimeDistributionMap.put(">20min", 0);
+        waitTimeDistributionMap.put("leave", 0);
     }
 
     public void updateWaitTimeDistributionPie(String key) {
-        waitTimeDistributionPieMap.put(key, waitTimeDistributionPieMap.get(key) + 1);
-        int total = waitTimeDistributionPieMap.values().stream().mapToInt(Integer::intValue).sum();
+        waitTimeDistributionMap.put(key, waitTimeDistributionMap.get(key) + 1);
+        int total = waitTimeDistributionMap.values().stream().mapToInt(Integer::intValue).sum();
         for (PieChart.Data d : waitTimeDistributionPieData) {
-            double v = 100.0 * waitTimeDistributionPieMap.get(d.getName()) / total;
+            double v = 100.0 * waitTimeDistributionMap.get(d.getName()) / total;
             Platform.runLater(() -> d.setPieValue(v));
         }
     }
@@ -252,5 +274,4 @@ public class StatisticsController extends Controller {
                 })))
         ;
     }
-
 }

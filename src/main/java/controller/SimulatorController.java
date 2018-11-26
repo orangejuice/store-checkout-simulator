@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -212,12 +213,20 @@ public class SimulatorController extends Controller {
         finishSimulationTask = model.getThreadPoolExecutor().scheduleAtFixedRate(() -> {
             if (model.checkouts.stream().noneMatch(checkout -> checkout.getCounter().isBusying())) {
                 finishSimulationTask.cancel(false);
+                timeCountTask.cancel(false);
                 model.statisticsController.cancelStatisticsTask();
                 model.outputController.addLog("[store] all customers have gone.", Level.CONFIG);
                 model.outputController.addLog("[store] door closed.", Level.CONFIG);
                 model.outputController.addLog("[store] simulation finish. Thank you.", Level.CONFIG);
             }
         }, 0, 1, TimeUnit.SECONDS);
+        model.getThreadPoolExecutor().execute(() -> {
+            try {
+                finishSimulationTask.get();
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void initCustomerComingService() {
