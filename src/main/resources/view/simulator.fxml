@@ -4,14 +4,13 @@
 <?import javafx.scene.image.*?>
 <?import javafx.scene.layout.*?>
 <VBox xmlns:fx="http://javafx.com/fxml/1" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0"
-      AnchorPane.rightAnchor="0.0"
-      AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/10.0.1"
+      AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" xmlns="http://javafx.com/javafx/10.0.1"
       fx:controller="controller.SimulatorController">
     <ButtonBar prefHeight="40.0" style="-fx-padding: 5">
         <buttons>
             <Button fx:id="startButton" maxWidth="100" text="open door" ButtonBar.buttonData="LEFT"/>
             <Button fx:id="shutButton" maxWidth="100" text="shut door" ButtonBar.buttonData="LEFT"/>
-            <Button fx:id="resetButton" maxWidth="150" text="begin a new day" ButtonBar.buttonData="LEFT"/>
+            <Button fx:id="resetButton" maxWidth="120" text="begin a new day" ButtonBar.buttonData="LEFT"/>
             <Label maxWidth="70" text="Play speed:" ButtonBar.buttonData="RIGHT"/>
             <Slider fx:id="playSpeed" maxWidth="200.0" minorTickCount="0" showTickMarks="true" snapToTicks="true"
                     ButtonBar.buttonData="RIGHT"/>

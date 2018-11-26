@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.geometry.Side;
 import javafx.scene.chart.*;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -39,6 +40,7 @@ public class StatisticsController extends Controller {
     public LineChart totalProductionProcessedLine;
     public TextAreaExpandable recordDetail;
     public VBox VBox;
+    public Button exportButton;//todo export pdf
 
     private Properties props = PropertiesTool.getProps();
     private ObservableList<PieChart.Data> waitTimeDistributionPieData;

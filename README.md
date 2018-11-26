@@ -20,11 +20,11 @@
 5. human-simulation: temper good/bad
 5. processing bar
 6. record:
-    - total wait time for each customer 1
-    - total utilization for each checkout 1
-    - total products processed 1
-    - average customer wait time 1 
-    - average checkout utilization 1
+    - total wait time for each customer
+    - total utilization for each checkout
+    - total products processed
+    - average customer wait time 
+    - average checkout utilization
     - average products per trolley
     - the number of lost customers
 ##### statistics Panel functions
