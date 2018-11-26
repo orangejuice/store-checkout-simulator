@@ -284,7 +284,7 @@ public class SimulatorController extends Controller {
 
         model.outputController.customerComeEvent(customer);
         bestCheckout.getCustomers().offer(customer);
-        //todo Platform.runLater(() -> bestCheckout.getChildren().add(customer));
+        Platform.runLater(() -> bestCheckout.getChildren().add(customer));
     }
 
     private void setMarketBackgroundAutoFit() {

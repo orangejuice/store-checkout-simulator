@@ -92,11 +92,11 @@ public class Counter extends StackPane {
         int period = scanItemInterval / playSpeedDivide;
         scanTask = MainModel.getInstance().getThreadPoolExecutor().scheduleAtFixedRate(() -> {
             if (!MainModel.getInstance().pauseStatus) {
-                Checkout checkout = ((Checkout) getParent());
-                if (checkout.getCustomers().size() > 0) {
+                Checkout channel = ((Checkout) getParent());
+                if (channel.getCustomers().size() > 0) {
                     setBusying(true, playSpeedDivide);
                     // offer poll/peek for queue
-                    Customer nowCustomer = checkout.getCustomers().peek();
+                    Customer nowCustomer = channel.getCustomers().peek();
                     nowCustomer.setBeingServed(true);
 
                     int total = nowCustomer.getQuantityOfGoods();
@@ -118,16 +118,16 @@ public class Counter extends StackPane {
 
                     // change the arc
                     synchronized (MainModel.getInstance()) {
-                        checkout.getCustomerQueue().getArc().setLength(360.0 * waitFor / total);
+                        nowCustomer.getArc().setLength(360.0 * waitFor / total);
                     }
 
                     // if 0, delete
                     if (waitFor == 0) {
                         totalServedCustomers += 1;
-                        Customer customer = checkout.getCustomers().poll();
+                        Customer customer = channel.getCustomers().poll();
                         MainModel.getInstance().leftCustomers.add(customer);
-                        MainModel.getInstance().outputController.customerCheckoutEvent(checkout, customer);
-                        //todo Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
+                        MainModel.getInstance().outputController.customerCheckoutEvent(channel, customer);
+                        Platform.runLater(() -> channel.getChildren().remove(nowCustomer));
                         customer.leave();
                     }
                 } else {

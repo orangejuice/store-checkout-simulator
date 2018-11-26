@@ -10,7 +10,6 @@ import java.util.Queue;
 
 public class Checkout extends HBox {
     private Counter counter;
-    private CustomerQueue customerQueue;
 
     private Queue<Customer> customers = new LinkedList<>();
     private int type;
@@ -21,8 +20,7 @@ public class Checkout extends HBox {
 
         this.type = type;
         counter = new Counter(no, type, true);
-        customerQueue = new CustomerQueue();
-        getChildren().addAll(counter, customerQueue);
+        getChildren().add(counter);
     }
 
     public Checkout(int no) {
@@ -39,14 +37,6 @@ public class Checkout extends HBox {
 
     public int getType() {
         return type;
-    }
-
-    public CustomerQueue getCustomerQueue() {
-        return customerQueue;
-    }
-
-    public void setCustomerQueue(CustomerQueue customerQueue) {
-        this.customerQueue = customerQueue;
     }
 
     public static class CheckoutType {
