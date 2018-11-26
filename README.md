@@ -2,7 +2,7 @@
 
 ![demo](src/main/resources/image/screenshot%20(5).png "demo")
 
-![demo](src/main/resources/image/screenshot%20(3).png "demo")
+![demo](src/main/resources/image/screenshot%20(7).png "demo")
 
 
 ##### preference Panel functions
