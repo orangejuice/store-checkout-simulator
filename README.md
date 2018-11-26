@@ -22,17 +22,18 @@
 6. record:
     - total wait time for each customer
     - total utilization for each checkout
-    - total products processed //TODO add
-    - average customer wait time //TODO add
-    - average checkout utilization //TODO add
-    - average products per trolley //TODO add
-    - the number of lost customers //TODO add
+    - total products processed
+    - average customer wait time
+    - average checkout utilization
+    - average products per trolley
+    - the number of lost customers
 ##### statistics Panel functions
 1. selectable text.
 2. data visualization.
     - pie chart - waitingFor<1mins/1-5/5-10/10-15/15-30/>30/lost customer
     - total wait time for each customer
     - the utilization of all checkouts(normal+expressway) by time
+    - products processed per minute per checkout
 3. live update charts
 2. export to pdf report.
 

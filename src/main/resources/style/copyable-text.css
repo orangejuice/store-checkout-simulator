@@ -1,5 +1,17 @@
 .copyable-label, .copyable-label:focused {
     -fx-background-color: transparent;
     -fx-background-insets: 0;
-    -fx-padding: 10 0 10 0
+    -fx-padding: 10 0 10 0;
+}
+
+.copyable-label .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.copyable-label .viewport {
+    -fx-background-color: transparent;
+}
+
+.copyable-label .content {
+    -fx-background-color: transparent;
 }

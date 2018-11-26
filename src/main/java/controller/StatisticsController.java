@@ -5,9 +5,10 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Side;
 import javafx.scene.chart.*;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import object.Customer;
+import object.TextAreaExpandable;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import util.PropertiesTool;
@@ -35,7 +36,8 @@ public class StatisticsController extends Controller {
     public TextField rangeOfScanTime;
     public TextField date;
     public LineChart totalProductionProcessedLine;
-    public TextArea recordDetail;
+    public TextAreaExpandable recordDetail;
+    public VBox VBox;
 
     private Properties props = PropertiesTool.getProps();
     private ObservableList<PieChart.Data> waitTimeDistributionPieData;
@@ -65,6 +67,9 @@ public class StatisticsController extends Controller {
         totalProductionProcessedLine.getXAxis().setLabel("minute");
         totalProductionProcessedLine.getYAxis().setLabel("products(quantity)");
         totalProductionProcessedLine.setLegendSide(Side.RIGHT);
+
+        recordDetail = new TextAreaExpandable();
+        VBox.getChildren().add(recordDetail);
     }
 
     public void initStatistics(List<String> names) {
@@ -95,6 +100,7 @@ public class StatisticsController extends Controller {
 
         hasProcessedCustomers = 0;
         hasProcessedProductsMinute = names.stream().collect(Collectors.toMap(s -> s, s -> 1));
+        recordDetail.setText("available after simulation finished...");
     }
 
     public void initStatisticsTask() {
@@ -156,7 +162,7 @@ public class StatisticsController extends Controller {
             timeTask.cancel(false);
         }
         date.setText(date.getText() + "   end: " + DateTimeFormat.forPattern("HH:mm:ss").print(new DateTime()));
-        recordDetail.setText("dasdasdasdas\nsasfasa");
+        recordDetail.setText("123fasfs\ngafasfasf");
     }
 
     public void initWaitTimeEachCustomerScatter(List<String> names) {
