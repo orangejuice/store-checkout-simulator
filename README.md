@@ -34,7 +34,7 @@
 ##### statistics Panel functions
 1. selectable text.
 2. data visualization.
-    - pie chart - waitingFor<1mins/1-5/5-10/10-15/15-30/>30/lost customer
+    - pie chart - waitingFor<1mins/1-5/5-10/10-15/15-20/>20/lost customer
     - total wait time for each customer
     - the utilization of all checkouts(normal+expressway) by time
     - products processed per minute per checkout
