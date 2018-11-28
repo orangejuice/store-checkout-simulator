@@ -1,8 +1,8 @@
 # Supermarket Checkout Simulator
 
-![demo](src/main/resources/image/screenshot%20(5).png "demo")
+![demo](screenshots/screenshot%20(5).png "demo")
 
-![demo](src/main/resources/image/screenshot%20(7).png "demo")
+![demo](screenshots/screenshot%20(7).png "demo")
 
 
 ##### preference Panel functions
